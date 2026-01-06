@@ -2,10 +2,22 @@ const std = @import("std");
 const Io = std.Io;
 
 const zig_editor = @import("zig_editor");
+const screen = @import("screen.zig");
+const arrays = @import("arrays.zig");
+
+const U8Array2D = arrays.Array2D(u8);
 
 pub fn main() !void {
     // Prints to stderr, unbuffered, ignoring potential errors.
     std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+
+    //var buf: [32]u8 = undefined;
+    //const buf2 = try screen.escape(buf[0..], screen.ESC_CUU, 3);
+    //std.debug.print("{s} DDD", .{buf2});
+    //std.debug.print("{s} DDD", .{screen.Esc(screen.CUU, 0).buf});
+    //std.debug.print("{s} DDD", .{screen.Esc(screen.CUU, 4).buf});
+    //std.debug.print("{s} ***", .{screen.vpa(3, 5).str()});
+    //std.debug.print("\x1b[3;5H ---", .{});
 
     // In order to allocate memory we must construct an `Allocator` instance.
     var debug_allocator: std.heap.DebugAllocator(.{}) = .init;
@@ -26,7 +38,28 @@ pub fn main() !void {
 
     try zig_editor.printAnotherMessage(stdout_writer);
 
+    var arr = try U8Array2D.init(gpa, 40, 30);
+    defer arr.deinit();
+    arr.fill(' ');
+
+    screen.hoge();
+
+    try refresh(stdout_writer, &arr);
+
     try stdout_writer.flush(); // Don't forget to flush!
+}
+
+fn refresh(writer: *Io.Writer, fb: *const U8Array2D) !void {
+    const w = fb.width;
+    const h = fb.height;
+    for (0..h) |y| {
+        _ = try writer.write(screen.vpa(0, @intCast(y)).str());
+        for (0..w) |x| {
+            if (fb.get(x, y)) |p| {
+                try writer.writeByte(p.*);
+            }
+        }
+    }
 }
 
 test "simple test" {
