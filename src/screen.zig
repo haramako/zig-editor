@@ -119,3 +119,33 @@ pub const KeySequenceProcessor = struct {
         }
     }
 };
+
+const builtin = @import("builtin");
+const windows = std.os.windows;
+
+pub fn set_raw_mode(file: *std.Io.File, b: bool) !void {
+    if (builtin.os.tag == .windows) {
+        const ENABLE_PROCESSED_INPUT: u32 = 0x0001;
+        const ENABLE_ECHO_INPUT: u32 = 0x0004;
+        const ENABLE_LINE_INPUT: u32 = 0x0002;
+        const ENABLE_VIRTUAL_TERMINAL_INPUT: u32 = 0x0200;
+
+        const handle = file.handle;
+        var flags: u32 = undefined;
+        if (windows.kernel32.GetConsoleMode(handle, &flags) == 0) return error.NotATerminal;
+        if (b) {
+            flags &= ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
+            flags |= (ENABLE_VIRTUAL_TERMINAL_INPUT);
+        } else {
+            flags |= ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_VIRTUAL_TERMINAL_INPUT;
+        }
+        std.debug.assert(windows.kernel32.SetConsoleMode(handle, flags) != 0);
+    } else {
+        const posix = std.posix;
+        var t: posix.termios = try posix.tcgetattr(posix.STDIN_FILENO);
+
+        t.lflag.ECHO = !b;
+        t.lflag.ICANON = !b;
+        try posix.tcsetattr(posix.STDIN_FILENO, .NOW, t);
+    }
+}
