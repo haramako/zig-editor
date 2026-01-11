@@ -1,6 +1,12 @@
 //! By convention, root.zig is the root source file when making a package.
 const std = @import("std");
 const Io = std.Io;
+const arrays = @import("arrays.zig");
+
+pub const FrameBuffer = @import("frame_buffer.zig");
+pub const App = @import("app.zig");
+pub const screen = @import("screen.zig");
+pub const Buffer = @import("buffer.zig");
 
 /// This is a documentation comment to explain the `printAnotherMessage` function below.
 ///
@@ -14,5 +20,7 @@ pub fn add(a: i32, b: i32) i32 {
 }
 
 test "basic add functionality" {
+    var buf = try Buffer.init(std.testing.allocator, "Hello", .{});
+    defer buf.deinit();
     try std.testing.expect(add(3, 7) == 10);
 }

@@ -1,4 +1,5 @@
 const App = @This();
+
 const std = @import("std");
 const Io = std.Io;
 const mem = std.mem;
@@ -29,8 +30,10 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
 
     const pos: Point = .{ .x = 10, .y = 10 };
 
+    var stdout_file = Io.File.stdout();
+    try screen.set_raw_mode_writer(&stdout_file, true);
     const stdout_buffer = try gpa.alloc(u8, 1024);
-    const stdout_file_writer: Io.File.Writer = .init(.stdout(), io, stdout_buffer);
+    const stdout_file_writer: Io.File.Writer = .init(stdout_file, io, stdout_buffer);
 
     var stdin_file = Io.File.stdin();
     try screen.set_raw_mode(&stdin_file, true);

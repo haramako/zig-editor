@@ -4,16 +4,16 @@ const mem = std.mem;
 const Io = std.Io;
 
 const zig_editor = @import("zig_editor");
-const screen = @import("screen.zig");
-const arrays = @import("arrays.zig");
-const App = @import("app.zig");
+const screen = zig_editor.screen;
+const arrays = zig_editor.arrays;
+const FrameBuffer = zig_editor.FrameBuffer;
 
 pub fn main(init: std.process.Init) !void {
     var debug_allocator: std.heap.DebugAllocator(.{}) = .init;
     defer _ = debug_allocator.deinit();
     const gpa = debug_allocator.allocator();
 
-    var app: App = try .init(init.io, gpa);
+    var app: zig_editor.App = try .init(init.io, gpa);
     defer app.deinit();
 
     var ksp = try screen.KeySequenceProcessor.init(init.gpa);
@@ -26,39 +26,39 @@ pub fn main(init: std.process.Init) !void {
         while (ksp.nextKey()) |c| {
             processKey(&app, c);
             try refresh(app.stdout(), &app.buf);
+            _ = try app.stdout().write(screen.vpa(app.pos.x + 1, app.pos.y + 1).str());
+            try app.stdout().flush();
         }
     }
 }
 
-pub fn processKey(self: *App, c: u8) void {
+pub fn processKey(self: *zig_editor.App, c: u8) void {
     switch (c) {
         @intFromEnum(screen.KeyCode.Up) => {
             self.pos.y -= 1;
-            self.buf.at(@intCast(self.pos.x), @intCast(self.pos.y)).* = '@';
         },
         @intFromEnum(screen.KeyCode.Down) => {
             self.pos.y += 1;
-            self.buf.at(@intCast(self.pos.x), @intCast(self.pos.y)).* = '@';
         },
         @intFromEnum(screen.KeyCode.Left) => {
             self.pos.x -= 1;
-            self.buf.at(@intCast(self.pos.x), @intCast(self.pos.y)).* = '@';
         },
         @intFromEnum(screen.KeyCode.Right) => {
             self.pos.x += 1;
-            self.buf.at(@intCast(self.pos.x), @intCast(self.pos.y)).* = '@';
         },
         else => {
-            debug.print("Pressed key: {c}\n", .{c});
+            self.buf.at(@intCast(self.pos.x), @intCast(self.pos.y)).* = c;
+            self.pos.x += 1;
+            //debug.print("Pressed key: {c}\n", .{c});
         },
     }
 }
 
-fn refresh(writer: *Io.Writer, fb: *const App.U8Array2D) !void {
+fn refresh(writer: *Io.Writer, fb: *const zig_editor.App.U8Array2D) !void {
     const w = fb.width;
     const h = fb.height;
     for (0..h) |y| {
-        _ = try writer.write(screen.vpa(0, @intCast(y)).str());
+        _ = try writer.write(screen.vpa(1, @intCast(y + 1)).str());
         for (0..w) |x| {
             if (fb.get(x, y)) |p| {
                 try writer.writeByte(p.*);
