@@ -77,6 +77,10 @@ pub fn esc2(code: Code, n: i32, m: i32) EscapeSequence {
     return EscapeSequence{ .code = code, .n = n, .m = m };
 }
 
+pub fn pos(x: i32, y: i32) EscapeSequence {
+    return esc2(.CUP, y, x);
+}
+
 pub fn sgr(param: SGRParam) EscapeSequence {
     return esc1(.SGR, @intFromEnum(param));
 }

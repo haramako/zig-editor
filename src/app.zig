@@ -26,7 +26,7 @@ pub const CommandFunc = *const fn (ctx: Ctx) anyerror!void;
 
 io: Io,
 gpa: mem.Allocator,
-buf: CharacterArray2D,
+fb: CharacterArray2D,
 pos: Point,
 
 stdout_buffer: []u8,
@@ -34,12 +34,19 @@ stdout_file_writer: Io.File.Writer,
 stdin_buffer: []u8,
 stdin_file_reader: Io.File.Reader,
 
-current_frame: ?*TextFrame = null,
+current_frame: *TextFrame,
 
 commands: std.AutoHashMap(screen.Key, CommandFunc),
 
 pub fn init(io: Io, gpa: mem.Allocator) !App {
     var stdout_file = Io.File.stdout();
+    const stdout_buffer = try gpa.alloc(u8, 4096);
+    const stdout_file_writer: Io.File.Writer = .init(stdout_file, io, stdout_buffer);
+
+    const stdin_file = Io.File.stdin();
+    const stdin_buffer = try gpa.alloc(u8, 4096);
+    const stdin_file_reader: Io.File.Reader = .init(stdin_file, io, stdin_buffer);
+
     var size: screen.ConsoleInfo = undefined;
     if (screen.getConsoleInfo(&stdout_file)) |info| {
         size = info;
@@ -50,35 +57,34 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
     var buf: CharacterArray2D = try .init(gpa, @intCast(size.width), @intCast(size.height));
     buf.fill(Character{ .chr = ' ', .attr = 0, .color = 0 });
 
-    const pos: Point = .{ .x = 10, .y = 10 };
-
-    //var stdout_file = Io.File.stdout();
-    try screen.set_raw_mode_writer(&stdout_file, true);
-    const stdout_buffer = try gpa.alloc(u8, 1024);
-    const stdout_file_writer: Io.File.Writer = .init(stdout_file, io, stdout_buffer);
-
-    var stdin_file = Io.File.stdin();
-    try screen.set_raw_mode(&stdin_file, true);
-    const stdin_buffer = try gpa.alloc(u8, 1024);
-    const stdin_file_reader: Io.File.Reader = .init(stdin_file, io, stdin_buffer);
+    const pos: Point = .{ .x = 0, .y = 3 };
 
     const commands = std.AutoHashMap(screen.Key, CommandFunc).init(gpa);
+
+    const current_frame = try gpa.create(TextFrame);
+    current_frame.* = try TextFrame.init(gpa, "");
 
     return App{
         .io = io,
         .gpa = gpa,
-        .buf = buf,
+        .fb = buf,
         .pos = pos,
         .stdout_buffer = stdout_buffer,
         .stdout_file_writer = stdout_file_writer,
         .stdin_buffer = stdin_buffer,
         .stdin_file_reader = stdin_file_reader,
         .commands = commands,
+        .current_frame = current_frame,
     };
 }
 
+pub fn setupConsole(self: *@This()) !void {
+    try screen.set_raw_mode_writer(&self.stdout_file_writer.file, true);
+    try screen.set_raw_mode(&self.stdin_file_reader.file, true);
+}
+
 pub fn deinit(self: *@This()) void {
-    self.buf.deinit();
+    self.fb.deinit();
     self.gpa.free(self.stdout_buffer);
     self.gpa.free(self.stdin_buffer);
 }
