@@ -37,11 +37,19 @@ pub const EscBuffer = struct {
     }
 };
 
-pub const KeyCode = enum(u8) {
-    Up = 0x10,
-    Down = 0x11,
-    Right = 0x12,
-    Left = 0x13,
+pub const ControlType = enum {
+    Up,
+    Down,
+    Right,
+    Left,
+    NewLine,
+    Delete,
+    Backspace,
+};
+
+pub const Key = union(enum) {
+    Control: ControlType,
+    DisplayCharacter: u8,
 };
 
 const KeySequenceState = enum {
@@ -72,15 +80,28 @@ pub const KeySequenceProcessor = struct {
         }
     }
 
-    pub fn nextKey(self: *@This()) ?u8 {
+    pub fn nextKey(self: *@This()) ?Key {
         const c = self.deque.popFront() orelse return null;
         switch (self.state) {
             .Normal => {
-                if (c == 0x1b) {
-                    self.state = .Escape;
-                    return null;
-                } else {
-                    return c;
+                switch (c) {
+                    0x1b => {
+                        self.state = .Escape;
+                        return null;
+                    },
+                    0x0a => {
+                        return Key{ .Control = .NewLine };
+                    },
+                    0x0d => {
+                        return Key{ .Control = .NewLine };
+                    },
+                    0x00...0x09, 0x0b...0x0c, 0x0e...0x1a, 0x1c...0x1f => {
+                        std.debug.print("Ignored control character: \\x{x:02}\n", .{c});
+                        return null;
+                    },
+                    else => {
+                        return Key{ .DisplayCharacter = c };
+                    },
                 }
             },
             .Escape => {
@@ -90,26 +111,26 @@ pub const KeySequenceProcessor = struct {
                 } else {
                     std.debug.print("Unknown escape sequence: \\x1b{}\n", .{c});
                     self.state = .Normal;
-                    return c;
+                    return null;
                 }
             },
             .Escape2 => {
                 switch (c) {
                     'A' => {
                         self.state = .Normal;
-                        return @intFromEnum(KeyCode.Up);
+                        return Key{ .Control = .Up };
                     },
                     'B' => {
                         self.state = .Normal;
-                        return @intFromEnum(KeyCode.Down);
+                        return Key{ .Control = .Down };
                     },
                     'C' => {
                         self.state = .Normal;
-                        return @intFromEnum(KeyCode.Right);
+                        return Key{ .Control = .Right };
                     },
                     'D' => {
                         self.state = .Normal;
-                        return @intFromEnum(KeyCode.Left);
+                        return Key{ .Control = .Left };
                     },
                     else => {
                         std.debug.print("Unknown escape sequence: \\x1b[{}\n", .{c});

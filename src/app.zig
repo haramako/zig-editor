@@ -7,14 +7,22 @@ const deque = @import("deque.zig");
 const arrays = @import("arrays.zig");
 const screen = @import("screen.zig");
 const types = @import("types.zig");
+const TextFrame = @import("text_frame.zig");
 
 const CharacterArray2D = types.CPDArray2D;
 const Character = types.CPD;
+
+pub const Ctx = struct {
+    app: *App,
+    frame: ?*TextFrame,
+};
 
 pub const Point = struct {
     x: i32,
     y: i32,
 };
+
+pub const CommandFunc = *const fn (ctx: Ctx) anyerror!void;
 
 io: Io,
 gpa: mem.Allocator,
@@ -25,6 +33,10 @@ stdout_buffer: []u8,
 stdout_file_writer: Io.File.Writer,
 stdin_buffer: []u8,
 stdin_file_reader: Io.File.Reader,
+
+current_frame: ?*TextFrame = null,
+
+commands: std.AutoHashMap(screen.Key, CommandFunc),
 
 pub fn init(io: Io, gpa: mem.Allocator) !App {
     var stdout_file = Io.File.stdout();
@@ -50,6 +62,8 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
     const stdin_buffer = try gpa.alloc(u8, 1024);
     const stdin_file_reader: Io.File.Reader = .init(stdin_file, io, stdin_buffer);
 
+    const commands = std.AutoHashMap(screen.Key, CommandFunc).init(gpa);
+
     return App{
         .io = io,
         .gpa = gpa,
@@ -59,6 +73,7 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
         .stdout_file_writer = stdout_file_writer,
         .stdin_buffer = stdin_buffer,
         .stdin_file_reader = stdin_file_reader,
+        .commands = commands,
     };
 }
 
@@ -74,4 +89,10 @@ pub fn stdin(self: *@This()) *Io.Reader {
 
 pub fn stdout(self: *@This()) *Io.Writer {
     return &self.stdout_file_writer.interface;
+}
+
+pub fn registerCommand(self: *@This(), key: screen.Key, command: CommandFunc) !void {
+    self.commands.put(key, command) catch {
+        return error.commandRegistrationFailed;
+    };
 }
