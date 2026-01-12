@@ -3,10 +3,13 @@ const std = @import("std");
 const Io = std.Io;
 const arrays = @import("arrays.zig");
 
+pub const types = @import("types.zig");
 pub const FrameBuffer = @import("frame_buffer.zig");
 pub const App = @import("app.zig");
 pub const screen = @import("screen.zig");
 pub const Buffer = @import("buffer.zig");
+pub const TextFrame = @import("text_frame.zig");
+pub const vt100 = @import("vt100.zig");
 
 /// This is a documentation comment to explain the `printAnotherMessage` function below.
 ///

@@ -6,8 +6,10 @@ const mem = std.mem;
 const deque = @import("deque.zig");
 const arrays = @import("arrays.zig");
 const screen = @import("screen.zig");
+const types = @import("types.zig");
 
-pub const U8Array2D = arrays.Array2D(u8);
+const CharacterArray2D = types.CPDArray2D;
+const Character = types.CPD;
 
 pub const Point = struct {
     x: i32,
@@ -16,7 +18,7 @@ pub const Point = struct {
 
 io: Io,
 gpa: mem.Allocator,
-buf: U8Array2D,
+buf: CharacterArray2D,
 pos: Point,
 
 stdout_buffer: []u8,
@@ -25,12 +27,20 @@ stdin_buffer: []u8,
 stdin_file_reader: Io.File.Reader,
 
 pub fn init(io: Io, gpa: mem.Allocator) !App {
-    var buf: U8Array2D = try .init(gpa, 40, 30);
-    buf.fill(' ');
+    var stdout_file = Io.File.stdout();
+    var size: screen.ConsoleInfo = undefined;
+    if (screen.getConsoleInfo(&stdout_file)) |info| {
+        size = info;
+    } else {
+        size = .{ .width = 80, .height = 25 };
+    }
+
+    var buf: CharacterArray2D = try .init(gpa, @intCast(size.width), @intCast(size.height));
+    buf.fill(Character{ .chr = ' ', .attr = 0, .color = 0 });
 
     const pos: Point = .{ .x = 10, .y = 10 };
 
-    var stdout_file = Io.File.stdout();
+    //var stdout_file = Io.File.stdout();
     try screen.set_raw_mode_writer(&stdout_file, true);
     const stdout_buffer = try gpa.alloc(u8, 1024);
     const stdout_file_writer: Io.File.Writer = .init(stdout_file, io, stdout_buffer);

@@ -1,8 +1,8 @@
 
 
 * 上下左右,Enter,DEL,BS,HOME,END
-* Buffer
-* Buffer.modify
+- Buffer
+- Buffer.modify
 * lineFromBuffer
 
 ## 全体の流れ

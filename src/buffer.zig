@@ -1,4 +1,4 @@
-const Buffer = @This();
+pub const Buffer = @This();
 
 const std = @import("std");
 const mem = std.mem;
@@ -30,7 +30,7 @@ pub fn deinit(self: *@This()) void {
 }
 
 /// Get the length of the data in the buffer.
-pub fn len(self: *@This()) usize {
+pub fn len(self: *const @This()) usize {
     return self.gapStart + (self.data.len - self.gapEnd);
 }
 
@@ -82,6 +82,26 @@ pub fn regap(self: *@This(), pos: usize) !void {
         self.gapEnd += move_size;
     } else {
         return error.outOfBounds;
+    }
+}
+
+pub fn get(self: *const @This(), index: usize) ?u8 {
+    if (index < self.gapStart) {
+        return self.data[index];
+    } else if (index >= self.gapStart and index < self.len()) {
+        return self.data[self.gapEnd + (index - self.gapStart)];
+    } else {
+        return null;
+    }
+}
+
+pub fn at(self: *@This(), index: usize) ?*u8 {
+    if (index < self.gapStart) {
+        return &self.data[index];
+    } else if (index >= self.gapStart and index < self.len()) {
+        return &self.data[self.gapEnd + (index - self.gapStart)];
+    } else {
+        return null;
     }
 }
 
