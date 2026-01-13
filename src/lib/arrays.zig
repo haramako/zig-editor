@@ -805,13 +805,13 @@ test "Array2D Manipulation" {
     arr1.fill(10);
     arr1.at(1, 1).* = 20; // { 10, 10, 10, 10, 20, 10 }
 
-    var arr2 = try arr1.rotateClockwise();
+    var arr2 = try arr1.rotateClockwise(allocator);
     defer arr2.deinit();
 
     try std.testing.expect(arr2.width == 2);
     try std.testing.expect(arr2.height == 3);
 
-    var arr3 = try arr1.flipVertical();
+    var arr3 = try arr1.flipVertical(allocator);
     defer arr3.deinit();
     try std.testing.expect(arr3.width == 3);
     try std.testing.expect(arr3.height == 2);
