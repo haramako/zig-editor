@@ -36,7 +36,7 @@ stdin_file_reader: Io.File.Reader,
 
 current_frame: *TextFrame,
 
-commands: std.AutoHashMap(screen.Key, CommandFunc),
+commands: std.AutoHashMap(types.Key, CommandFunc),
 
 pub fn init(io: Io, gpa: mem.Allocator) !App {
     var stdout_file = Io.File.stdout();
@@ -59,7 +59,7 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
 
     const pos: Point = .{ .x = 0, .y = 3 };
 
-    const commands = std.AutoHashMap(screen.Key, CommandFunc).init(gpa);
+    const commands = std.AutoHashMap(types.Key, CommandFunc).init(gpa);
 
     const current_frame = try gpa.create(TextFrame);
     current_frame.* = try TextFrame.init(gpa, "");
@@ -97,7 +97,7 @@ pub fn stdout(self: *@This()) *Io.Writer {
     return &self.stdout_file_writer.interface;
 }
 
-pub fn registerCommand(self: *@This(), key: screen.Key, command: CommandFunc) !void {
+pub fn registerCommand(self: *@This(), key: types.Key, command: CommandFunc) !void {
     self.commands.put(key, command) catch {
         return error.commandRegistrationFailed;
     };

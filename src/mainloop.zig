@@ -3,12 +3,13 @@ const Io = std.Io;
 
 const App = @import("app.zig");
 const screen = @import("screen.zig");
+const KeySequenceProcessor = @import("key_sequence_processor.zig");
 const types = @import("types.zig");
 const vt100 = @import("vt100.zig");
 const TextFrame = @import("text_frame.zig");
 
 pub fn mainloop(app: *App) !void {
-    var ksp = try screen.KeySequenceProcessor.init(app.gpa);
+    var ksp = try KeySequenceProcessor.init(app.gpa);
     defer ksp.deinit();
 
     while (true) {
@@ -32,7 +33,7 @@ pub fn updateScreen(app: *App) !void {
     try app.stdout().flush();
 }
 
-pub fn processKey(app: *App, k: screen.Key) !void {
+pub fn processKey(app: *App, k: types.Key) !void {
     if (app.commands.get(k)) |command| {
         try command(.{ .app = app, .frame = app.current_frame });
     } else {

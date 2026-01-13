@@ -2,6 +2,21 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const arrays = @import("lib/arrays.zig");
 
+pub const KeyControlType = enum {
+    Up,
+    Down,
+    Right,
+    Left,
+    NewLine,
+    Delete,
+    Backspace,
+};
+
+pub const Key = union(enum) {
+    Control: KeyControlType,
+    DisplayCharacter: u8,
+};
+
 /// Character Presentation Descriptor
 pub const CPD = struct {
     chr: u8,

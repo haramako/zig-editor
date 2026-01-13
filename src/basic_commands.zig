@@ -1,5 +1,6 @@
 const App = @import("app.zig");
 const screen = @import("screen.zig");
+const types = @import("types.zig");
 
 pub fn do_up(ctx: App.Ctx) !void {
     ctx.app.pos.y -= 1;
@@ -23,7 +24,7 @@ pub fn do_newline(ctx: App.Ctx) !void {
 }
 
 pub fn registerCommands(app: *App) !void {
-    const Key = screen.Key;
+    const Key = types.Key;
     try app.registerCommand(Key{ .Control = .Up }, &do_up);
     try app.registerCommand(Key{ .Control = .Down }, &do_down);
     try app.registerCommand(Key{ .Control = .Left }, &do_left);

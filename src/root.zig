@@ -3,8 +3,8 @@ pub const arrays = @import("lib/arrays.zig");
 pub const dequeue = @import("lib/deque.zig");
 
 pub const types = @import("types.zig");
-pub const FrameBuffer = @import("frame_buffer.zig");
 pub const App = @import("app.zig");
+pub const key_sequence_processor = @import("key_sequence_processor.zig");
 pub const screen = @import("screen.zig");
 pub const Buffer = @import("buffer.zig");
 pub const TextFrame = @import("text_frame.zig");
