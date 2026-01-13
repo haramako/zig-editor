@@ -1,7 +1,7 @@
 const std = @import("std");
 
 /// VT100 Escape Codes
-pub const Code = enum(u8) {
+pub const CSICode = enum(u8) {
     CUU = 'A', // Cursor Up
     CUD = 'B', // Cursor Down
     CUF = 'C', // Cursor Forward
@@ -51,29 +51,31 @@ pub const SGRParam = enum(u8) {
 };
 
 pub const EscapeSequence = struct {
-    code: Code,
-    n: i32 = -1,
-    m: i32 = -1,
+    code: CSICode,
+    n: ?i32 = null,
+    m: ?i32 = null,
     pub fn format(self: @This(), writer: anytype) !void {
-        if (self.m >= 0) {
-            return writer.print("\x1b[{};{}{c}", .{ self.n, self.m, @intFromEnum(self.code) });
-        } else if (self.n >= 0) {
-            return writer.print("\x1b[{}{c}", .{ self.n, @intFromEnum(self.code) });
+        if (self.n) |n| {
+            if (self.m) |m| {
+                return writer.print("\x1b[{};{}{c}", .{ n, m, @intFromEnum(self.code) });
+            } else {
+                return writer.print("\x1b[{}{c}", .{ n, @intFromEnum(self.code) });
+            }
         } else {
             return writer.print("\x1b{c}", .{@intFromEnum(self.code)});
         }
     }
 };
 
-pub fn esc0(code: Code) EscapeSequence {
+pub fn esc0(code: CSICode) EscapeSequence {
     return EscapeSequence{ .code = code };
 }
 
-pub fn esc1(code: Code, n: i32) EscapeSequence {
+pub fn esc1(code: CSICode, n: i32) EscapeSequence {
     return EscapeSequence{ .code = code, .n = n };
 }
 
-pub fn esc2(code: Code, n: i32, m: i32) EscapeSequence {
+pub fn esc2(code: CSICode, n: i32, m: i32) EscapeSequence {
     return EscapeSequence{ .code = code, .n = n, .m = m };
 }
 

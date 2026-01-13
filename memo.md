@@ -1,18 +1,15 @@
 
 
 * 上下左右,Enter,DEL,BS,HOME,END
+* Commandを整備する
+* Cursorを実装
 - Buffer
 - Buffer.modify
 - lineFromBuffer
-- Commandを整備する
 
 ## 全体の流れ
 
 Buffer -> LineBuffer（１行ごと、文字の数、色などを判別） -> FrameBuffer（１画面）
-
-fn lineFromBuffer(out: []Character, buf: Buffer, start: int, end: int) ![]Character
-fn screen
-
 
 ## FrameBuffer
 

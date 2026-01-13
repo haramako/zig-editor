@@ -12,16 +12,15 @@ pub fn mainloop(app: *App) !void {
     var ksp = try KeySequenceProcessor.init(app.gpa);
     defer ksp.deinit();
 
+    try updateScreen(app);
+
     while (true) {
         const c2 = app.stdin().takeByte() catch continue;
         ksp.addByte(c2);
 
         while (ksp.nextKey()) |c| {
             try processKey(app, c);
-            try redraw(app);
-            try refresh(app.stdout(), &app.fb);
-            _ = try vt100.pos(app.pos.x + 1, app.pos.y + 1).format(app.stdout());
-            try app.stdout().flush();
+            try updateScreen(app);
         }
     }
 }
@@ -29,7 +28,7 @@ pub fn mainloop(app: *App) !void {
 pub fn updateScreen(app: *App) !void {
     try redraw(app);
     try refresh(app.stdout(), &app.fb);
-    _ = try vt100.pos(app.pos.x + 1, app.pos.y + 1).format(app.stdout());
+    try app.stdout().print("{f}", .{vt100.pos(app.pos.x + 1, app.pos.y + 1)});
     try app.stdout().flush();
 }
 
@@ -54,19 +53,15 @@ pub fn redraw(app: *App) !void {
     text_frame.lines.clearAndFree(app.gpa);
     try TextFrame.makeLineCPDList(app.gpa, &text_frame.buf, &text_frame.lines);
 
-    var i: usize = 0;
-    for (text_frame.lines.items) |line| {
+    for (text_frame.lines.items, 0..) |line, i| {
         @memcpy(app.fb.items[i][0..line.cpds.items.len], line.cpds.items);
-        i += 1;
     }
 }
 
 pub fn refresh(writer: *Io.Writer, fb: *const types.CPDArray2D) !void {
-    const w = fb.width;
-    const h = fb.height;
-    for (0..h) |y| {
+    for (0..fb.height) |y| {
         _ = try vt100.pos(1, @intCast(y + 1)).format(writer);
-        for (0..w) |x| {
+        for (0..fb.width) |x| {
             if (fb.get(x, y)) |p| {
                 try writer.writeByte(p.chr);
             }

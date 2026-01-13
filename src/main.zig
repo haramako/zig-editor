@@ -28,9 +28,7 @@ pub fn main(init: std.process.Init) !void {
     try ze.basic_commands.registerCommands(&app);
 
     const src = "Hello\nZig Editor\nHow are you?\n";
-    var text_frame = app.current_frame;
-    try text_frame.buf.insertStr(0, src);
+    try app.current_frame.insertStr(app.current_frame.screen_cursor, src);
 
-    try ze.mainloop.updateScreen(&app);
     try ze.mainloop.mainloop(&app);
 }
