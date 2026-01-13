@@ -1,6 +1,6 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const arrays = @import("arrays.zig");
+const arrays = @import("lib/arrays.zig");
 
 /// Character Presentation Descriptor
 pub const CPD = struct {

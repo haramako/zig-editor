@@ -21,40 +21,16 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
-    const tf = try ze.TextFrame.init(gpa, "");
-    _ = tf;
-
     var app: ze.App = try .init(init.io, gpa);
     defer app.deinit();
 
-    //try app.setupConsole();
+    try app.setupConsole();
     try ze.basic_commands.registerCommands(&app);
 
     const src = "Hello\nZig Editor\nHow are you?\n";
     var text_frame = app.current_frame;
     try text_frame.buf.insertStr(0, src);
 
-    if (false) {
-        try ze.TextFrame.makeLineCPDList(gpa, &text_frame.buf, &text_frame.lines);
-
-        var i: usize = 0;
-        for (text_frame.lines.items) |line| {
-            @memcpy(app.fb.items[i][0..line.cpds.items.len], line.cpds.items);
-            i += 1;
-        }
-
-        try ze.mainloop.refresh(app.stdout(), &app.fb);
-        _ = try ze.vt100.pos(app.pos.x + 1, app.pos.y + 1).format(app.stdout());
-        try app.stdout().flush();
-    }
-
+    try ze.mainloop.updateScreen(&app);
     try ze.mainloop.mainloop(&app);
-}
-
-test "hoge" {
-    const gpa = std.testing.allocator;
-    var tf = try ze.TextFrame.init(gpa, "");
-    defer tf.deinit();
-
-    try std.testing.expect(true);
 }

@@ -1,5 +1,6 @@
 const std = @import("std");
-const arrays = @import("arrays.zig");
+pub const arrays = @import("lib/arrays.zig");
+pub const dequeue = @import("lib/deque.zig");
 
 pub const types = @import("types.zig");
 pub const FrameBuffer = @import("frame_buffer.zig");

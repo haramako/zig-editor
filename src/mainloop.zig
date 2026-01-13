@@ -25,6 +25,13 @@ pub fn mainloop(app: *App) !void {
     }
 }
 
+pub fn updateScreen(app: *App) !void {
+    try redraw(app);
+    try refresh(app.stdout(), &app.fb);
+    _ = try vt100.pos(app.pos.x + 1, app.pos.y + 1).format(app.stdout());
+    try app.stdout().flush();
+}
+
 pub fn processKey(app: *App, k: screen.Key) !void {
     if (app.commands.get(k)) |command| {
         try command(.{ .app = app, .frame = app.current_frame });

@@ -1,6 +1,6 @@
 const std = @import("std");
 const mem = std.mem;
-const deque = @import("deque.zig");
+const deque = @import("lib/deque.zig");
 
 pub const ControlType = enum {
     Up,
