@@ -11,6 +11,7 @@ pub const TextFrame = @import("text_frame.zig");
 pub const vt100 = @import("vt100.zig");
 pub const basic_commands = @import("basic_commands.zig");
 pub const mainloop = @import("mainloop.zig");
+pub const bufutil = @import("bufutil.zig");
 
 comptime {
     std.testing.refAllDecls(@This());

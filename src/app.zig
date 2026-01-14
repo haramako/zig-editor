@@ -27,7 +27,6 @@ pub const CommandFunc = *const fn (ctx: Ctx) anyerror!void;
 io: Io,
 gpa: mem.Allocator,
 fb: CharacterArray2D,
-pos: Point,
 
 stdout_buffer: []u8,
 stdout_file_writer: Io.File.Writer,
@@ -57,8 +56,6 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
     var buf: CharacterArray2D = try .init(gpa, @intCast(size.width), @intCast(size.height));
     buf.fill(Character{ .chr = ' ', .attr = 0, .color = 0 });
 
-    const pos: Point = .{ .x = 0, .y = 3 };
-
     const commands = std.AutoHashMap(types.Key, CommandFunc).init(gpa);
 
     const current_frame = try gpa.create(TextFrame);
@@ -68,7 +65,6 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
         .io = io,
         .gpa = gpa,
         .fb = buf,
-        .pos = pos,
         .stdout_buffer = stdout_buffer,
         .stdout_file_writer = stdout_file_writer,
         .stdin_buffer = stdin_buffer,

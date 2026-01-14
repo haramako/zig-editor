@@ -7,6 +7,7 @@ const KeySequenceProcessor = @import("key_sequence_processor.zig");
 const types = @import("types.zig");
 const vt100 = @import("vt100.zig");
 const TextFrame = @import("text_frame.zig");
+const bufutil = @import("bufutil.zig");
 
 pub fn mainloop(app: *App) !void {
     var ksp = try KeySequenceProcessor.init(app.gpa);
@@ -28,7 +29,11 @@ pub fn mainloop(app: *App) !void {
 pub fn updateScreen(app: *App) !void {
     try redraw(app);
     try refresh(app.stdout(), &app.fb);
-    try app.stdout().print("{f}", .{vt100.pos(app.pos.x + 1, app.pos.y + 1)});
+    const frame = app.current_frame;
+    const cur = frame.screen_cursor();
+    const column = try bufutil.getColumnInLine(&frame.buf, cur.pos);
+    const line = cur.line;
+    try app.stdout().print("{f}", .{vt100.pos(@intCast(column + 1), @intCast(line + 1))});
     try app.stdout().flush();
 }
 
@@ -41,8 +46,10 @@ pub fn processKey(app: *App, k: types.Key) !void {
                 std.debug.print("Pressed control key: {}\n", .{control});
             },
             .DisplayCharacter => |c| {
-                try app.current_frame.buf.insertStr(10, &[_]u8{c});
-                app.pos.x += 1;
+                const frame = app.current_frame;
+                try frame.insertStr(frame.user_cursor(), &[_]u8{c});
+                frame.user_cursor().pos += 1;
+                frame.user_cursor().column += 1;
             },
         }
     }

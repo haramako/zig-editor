@@ -13,32 +13,35 @@ const Cursor = struct {
     pos: usize,
     line: usize,
     column: usize,
+
+    fn init() Cursor {
+        return .{
+            .pos = 0,
+            .line = 0,
+            .column = 0,
+        };
+    }
 };
 
 allocator: std.mem.Allocator,
 buf: Buffer,
 lines: std.ArrayList(LineCPD),
-cursors: std.ArrayList(*Cursor),
-screen_cursor: *Cursor,
+cursors: std.ArrayList(Cursor),
 
 pub fn init(gpa: Allocator, source: []const u8) !TextFrame {
     const buf: Buffer = try .init(gpa, source, .{});
     var lines: std.ArrayList(LineCPD) = try .initCapacity(gpa, 100);
-    var cursors: std.ArrayList(*Cursor) = try .initCapacity(gpa, 100);
-    const screen_cursor: *Cursor = try gpa.create(Cursor);
-    screen_cursor.* = Cursor{
-        .pos = 0,
-        .line = 0,
-        .column = 0,
-    };
-    try cursors.append(gpa, screen_cursor);
+    var cursors: std.ArrayList(Cursor) = try .initCapacity(gpa, 8);
+
+    try cursors.append(gpa, .init());
+    try cursors.append(gpa, .init());
+
     try makeLineCPDList(gpa, &buf, &lines);
     return .{
         .allocator = gpa,
         .buf = buf,
         .lines = lines,
         .cursors = cursors,
-        .screen_cursor = screen_cursor,
     };
 }
 
@@ -50,16 +53,20 @@ pub fn deinit(self: *TextFrame) void {
     }
     self.lines.deinit(self.allocator);
 
-    for (self.cursors.items) |cursor| {
-        self.allocator.destroy(cursor);
-    }
     self.cursors.deinit(self.allocator);
 }
 
+pub fn screen_cursor(self: *@This()) *Cursor {
+    return &self.cursors.items[0];
+}
+
+pub fn user_cursor(self: *@This()) *Cursor {
+    return &self.cursors.items[1];
+}
+
 pub fn addCursor(self: *@This(), pos: usize) !*Cursor {
-    const cursor = try self.allocator.create(Cursor);
-    cursor.* = std.mem.zeroes(Cursor);
-    try self.cursors.append(self.allocator, cursor);
+    try self.cursors.append(self.allocator, Cursor.init());
+    const cursor = &self.cursors.items[self.cursors.items.len - 1];
     try self.updateCursor(cursor, pos);
     return cursor;
 }
@@ -74,17 +81,6 @@ pub fn updateCursor(self: *const @This(), cursor: *Cursor, new_pos: usize) !void
             cursor.column = 0;
         } else {
             cursor.column += 1;
-        }
-    }
-}
-
-pub fn removeCursor(self: *@This(), cursor: *Cursor) void {
-    var index: usize = 0;
-    while (index < self.cursors.items.len) : (index += 1) {
-        if (self.cursors.items[index] == cursor) {
-            _ = self.cursors.swapRemove(index);
-            self.allocator.destroy(cursor);
-            return;
         }
     }
 }
@@ -108,7 +104,7 @@ pub fn modify(self: *@This(), cur: *Cursor, remove: usize, insert: []const u8) !
             }
         }
         // カーソルの移動
-        for (self.cursors.items) |cursor| {
+        for (self.cursors.items) |*cursor| {
             if (cursor.pos > pos + remove) {
                 cursor.pos -= remove;
                 cursor.line -= num_newlines;
@@ -165,10 +161,8 @@ test "cursor insert and remove" {
     defer tf.deinit();
 
     const cursor1 = try tf.addCursor(0);
-    defer tf.removeCursor(cursor1);
 
     const cursor2 = try tf.addCursor(9);
-    defer tf.removeCursor(cursor2);
 
     try t.expectEqual(Cursor{ .pos = 0, .line = 0, .column = 0 }, cursor1.*);
     try t.expectEqual(Cursor{ .pos = 9, .line = 2, .column = 1 }, cursor2.*);
