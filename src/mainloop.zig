@@ -8,6 +8,7 @@ const types = @import("types.zig");
 const vt100 = @import("vt100.zig");
 const TextFrame = @import("text_frame.zig");
 const bufutil = @import("bufutil.zig");
+const basic_commands = @import("basic_commands.zig");
 
 pub fn mainloop(app: *App) !void {
     var ksp = try KeySequenceProcessor.init(app.gpa);
@@ -27,35 +28,41 @@ pub fn mainloop(app: *App) !void {
 }
 
 pub fn updateScreen(app: *App) !void {
+    try updateCursors(app);
     try redraw(app);
     try refresh(app.stdout(), &app.fb);
     const frame = app.current_frame;
-    const cur = frame.screen_cursor();
-    const column = try bufutil.getColumnInLine(&frame.buf, cur.pos);
+    const cur = frame.user_cursor();
+    const column = cur.column;
     const line = cur.line;
     try app.stdout().print("{f}", .{vt100.pos(@intCast(column + 1), @intCast(line + 1))});
     try app.stdout().flush();
 }
 
+pub fn updateCursors(app: *App) !void {
+    var frame = app.current_frame;
+    for (frame.cursors.items) |*cur| {
+        try frame.updateCursor(cur, cur.pos);
+    }
+}
+
 pub fn processKey(app: *App, k: types.Key) !void {
     if (app.commands.get(k)) |command| {
-        try command(.{ .app = app, .frame = app.current_frame });
+        try command(.{ .app = app, .frame = app.current_frame, .key = k });
     } else {
         switch (k) {
             .Control => |control| {
                 std.debug.print("Pressed control key: {}\n", .{control});
             },
-            .DisplayCharacter => |c| {
-                const frame = app.current_frame;
-                try frame.insertStr(frame.user_cursor(), &[_]u8{c});
-                frame.user_cursor().pos += 1;
-                frame.user_cursor().column += 1;
+            .DisplayCharacter => |_| {
+                try basic_commands.do_insert(.{ .app = app, .frame = app.current_frame, .key = k });
             },
         }
     }
 }
 
 pub fn redraw(app: *App) !void {
+    app.fb.fill(.{ .chr = ' ', .attr = 0, .color = 0 });
     const text_frame = app.current_frame;
     text_frame.lines.clearAndFree(app.gpa);
     try TextFrame.makeLineCPDList(app.gpa, &text_frame.buf, &text_frame.lines);

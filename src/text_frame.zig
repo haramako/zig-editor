@@ -73,6 +73,8 @@ pub fn addCursor(self: *@This(), pos: usize) !*Cursor {
 
 pub fn updateCursor(self: *const @This(), cursor: *Cursor, new_pos: usize) !void {
     cursor.pos = new_pos;
+    cursor.line = 0;
+    cursor.column = 0;
     for (0..self.buf.len()) |i| {
         if (i == new_pos) break;
         const c = self.buf.get(i) orelse return error.outOfBounds;
@@ -133,11 +135,10 @@ pub fn makeLineCPDList(gpa: Allocator, buf: *const Buffer, lines: *std.ArrayList
     while (true) {
         var line_cpd: LineCPD = try .init(gpa);
         const eob, pos = try makeLineCPD(gpa, buf, pos, &line_cpd.cpds);
+        try lines.append(gpa, line_cpd);
         if (eob) {
-            line_cpd.deinit(gpa);
             break;
         }
-        try lines.append(gpa, line_cpd);
     }
 }
 

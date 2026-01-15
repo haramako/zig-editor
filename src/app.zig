@@ -15,6 +15,7 @@ const Character = types.CPD;
 pub const Ctx = struct {
     app: *App,
     frame: ?*TextFrame,
+    key: types.Key,
 };
 
 pub const Point = struct {
