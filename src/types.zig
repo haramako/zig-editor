@@ -10,6 +10,10 @@ pub const KeyControlType = enum {
     NewLine,
     Delete,
     Backspace,
+    PageUp,
+    PageDown,
+    Home,
+    End,
 };
 
 pub const Key = union(enum) {

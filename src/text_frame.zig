@@ -5,6 +5,7 @@ const Allocator = std.mem.Allocator;
 
 const types = @import("types.zig");
 const Buffer = @import("buffer.zig");
+const bufutil = @import("bufutil.zig");
 
 const CPD = types.CPD;
 const LineCPD = types.LineCPD;
@@ -151,6 +152,54 @@ fn makeLineCPD(gpa: Allocator, buf: *const Buffer, pos: usize, cpds: *std.ArrayL
         p += 1;
     }
     return error.outOfBounds;
+}
+
+pub fn moveCursorUp(frame: *TextFrame, cur: *Cursor) !void {
+    const head_of_this_line = try bufutil.lineHead(&frame.buf, cur.pos);
+    if (head_of_this_line == 0) {
+        cur.pos = 0;
+        return;
+    }
+    const head_of_prev_line = try bufutil.lineHead(&frame.buf, head_of_this_line - 1);
+    cur.pos = head_of_prev_line + cur.column;
+    if (cur.pos > head_of_this_line - 1) {
+        cur.pos = head_of_this_line - 1;
+    }
+}
+
+pub fn moveCursorDown(frame: *TextFrame, cur: *Cursor) !void {
+    const tail_of_this_line = try bufutil.lineTail(&frame.buf, cur.pos);
+    const tail_of_next_line = try bufutil.lineTail(&frame.buf, tail_of_this_line + 1);
+    if (tail_of_this_line >= frame.buf.len()) {
+        cur.pos = frame.buf.len();
+    } else {
+        cur.pos = tail_of_this_line + 1 + cur.column;
+        if (cur.pos >= tail_of_next_line) {
+            cur.pos = tail_of_next_line;
+        }
+    }
+}
+
+pub fn moveCursorLeft(frame: *TextFrame, cur: *Cursor) !void {
+    const head_of_this_line = try bufutil.lineHead(&frame.buf, cur.pos);
+    if (cur.pos > 0) {
+        if (cur.pos == head_of_this_line) {
+            cur.pos = head_of_this_line - 1;
+        } else {
+            cur.pos -= 1;
+        }
+    }
+}
+
+pub fn moveCursorRight(frame: *TextFrame, cur: *Cursor) !void {
+    const tail_of_this_line = try bufutil.lineTail(&frame.buf, cur.pos);
+    if (cur.pos < frame.buf.len()) {
+        if (cur.pos == tail_of_this_line) {
+            cur.pos = tail_of_this_line + 1;
+        } else {
+            cur.pos += 1;
+        }
+    }
 }
 
 const t = std.testing;

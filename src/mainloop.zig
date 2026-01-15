@@ -21,7 +21,7 @@ pub fn mainloop(app: *App) !void {
         ksp.addByte(c2);
 
         while (ksp.nextKey()) |c| {
-            try processKey(app, c);
+            processKey(app, c) catch break;
             try updateScreen(app);
         }
     }
@@ -53,6 +53,7 @@ pub fn processKey(app: *App, k: types.Key) !void {
         switch (k) {
             .Control => |control| {
                 std.debug.print("Pressed control key: {}\n", .{control});
+                @panic("Unhandled control key");
             },
             .DisplayCharacter => |_| {
                 try basic_commands.do_insert(.{ .app = app, .frame = app.current_frame, .key = k });
