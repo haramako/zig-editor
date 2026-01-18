@@ -3,6 +3,7 @@ const std = @import("std");
 const App = @import("app.zig");
 const screen = @import("screen.zig");
 const types = @import("types.zig");
+const log = @import("log.zig");
 const bufutil = @import("bufutil.zig");
 const TextFrame = @import("text_frame.zig");
 
@@ -62,22 +63,23 @@ pub fn do_insert(ctx: App.Ctx) !void {
 }
 
 pub fn do_nothing(ctx: App.Ctx) !void {
-    const frame = ctx.frame.?;
-    const cur = frame.user_cursor();
-    var buf: [256]u8 = undefined;
-    const str = try std.fmt.bufPrint(&buf, "Press {any}\n", .{ctx.key});
-    try frame.insertStr(cur, str);
+    log.log(.info, .default, "Pressed key: {any}", .{ctx.key});
 }
 
 pub fn registerCommands(app: *App) !void {
-    const Key = types.Key;
-    try app.registerCommand(Key{ .Control = .Up }, &do_up);
-    try app.registerCommand(Key{ .Control = .Down }, &do_down);
-    try app.registerCommand(Key{ .Control = .Left }, &do_left);
-    try app.registerCommand(Key{ .Control = .Right }, &do_right);
-    try app.registerCommand(Key{ .Control = .NewLine }, &do_newline);
-    try app.registerCommand(Key{ .Control = .Backspace }, &do_backspace);
-    try app.registerCommand(Key{ .Control = .Delete }, &do_delete);
-    try app.registerCommand(Key{ .Control = .PageUp }, &do_nothing);
-    try app.registerCommand(Key{ .Control = .PageDown }, &do_nothing);
+    try app.registerCommandKey("Up", &do_up);
+    try app.registerCommandKey("Down", &do_down);
+    try app.registerCommandKey("Left", &do_left);
+    try app.registerCommandKey("Right", &do_right);
+    try app.registerCommandKey("NewLine", &do_newline);
+    try app.registerCommandKey("Backspace", &do_backspace);
+    try app.registerCommandKey("Delete", &do_delete);
+    try app.registerCommandKey("PageUp", &do_nothing);
+    try app.registerCommandKey("PageDown", &do_nothing);
+
+    try app.registerCommandKey("C-P", &do_up);
+    try app.registerCommandKey("C-N", &do_down);
+    try app.registerCommandKey("C-B", &do_left);
+    try app.registerCommandKey("C-F", &do_right);
+    try app.registerCommandKey("C-H", &do_backspace);
 }

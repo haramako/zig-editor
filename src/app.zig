@@ -3,6 +3,7 @@ const App = @This();
 const std = @import("std");
 const Io = std.Io;
 const mem = std.mem;
+const key_sequence_processor = @import("key_sequence_processor.zig");
 const deque = @import("lib/deque.zig");
 const arrays = @import("lib/arrays.zig");
 const screen = @import("screen.zig");
@@ -92,6 +93,11 @@ pub fn stdin(self: *@This()) *Io.Reader {
 
 pub fn stdout(self: *@This()) *Io.Writer {
     return &self.stdout_file_writer.interface;
+}
+
+pub fn registerCommandKey(self: *@This(), keyStr: []const u8, command: CommandFunc) !void {
+    const key = try key_sequence_processor.parseKey(keyStr);
+    try self.registerCommand(key, command);
 }
 
 pub fn registerCommand(self: *@This(), key: types.Key, command: CommandFunc) !void {

@@ -21,14 +21,19 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
+    try ze.log.initLog(init.io, gpa);
+    defer ze.log.deinitLog(init.io, gpa);
+
     var app: ze.App = try .init(init.io, gpa);
     defer app.deinit();
 
-    try app.setupConsole();
     try ze.basic_commands.registerCommands(&app);
 
     const src = "Hello\nZig Editor\nHow are you?\n";
     try app.current_frame.insertStr(app.current_frame.screen_cursor(), src);
 
+    ze.log.log(.info, .default, "Zig Editor started.", .{});
+
+    try app.setupConsole();
     try ze.mainloop.mainloop(&app);
 }

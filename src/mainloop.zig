@@ -2,6 +2,7 @@ const std = @import("std");
 const Io = std.Io;
 
 const App = @import("app.zig");
+const log = @import("log.zig");
 const screen = @import("screen.zig");
 const KeySequenceProcessor = @import("key_sequence_processor.zig");
 const types = @import("types.zig");
@@ -22,8 +23,8 @@ pub fn mainloop(app: *App) !void {
 
         while (ksp.nextKey()) |c| {
             processKey(app, c) catch break;
-            try updateScreen(app);
         }
+        try updateScreen(app);
     }
 }
 
@@ -31,11 +32,17 @@ pub fn updateScreen(app: *App) !void {
     try updateCursors(app);
     try redraw(app);
     try refresh(app.stdout(), &app.fb);
+
+    if (log.logList.items.len > 0) {
+        app.stdout().print("{f}{s}", .{ vt100.pos(@intCast(1), @intCast(app.fb.height)), log.logList.items[log.logList.items.len - 1] }) catch {};
+    }
+
     const frame = app.current_frame;
     const cur = frame.user_cursor();
     const column = cur.column;
     const line = cur.line;
     try app.stdout().print("{f}", .{vt100.pos(@intCast(column + 1), @intCast(line + 1))});
+
     try app.stdout().flush();
 }
 
@@ -51,9 +58,14 @@ pub fn processKey(app: *App, k: types.Key) !void {
         try command(.{ .app = app, .frame = app.current_frame, .key = k });
     } else {
         switch (k) {
+            .Alt => |alt| {
+                log.warn("Pressed Alt+{c}", .{alt});
+            },
             .Control => |control| {
-                std.debug.print("Pressed control key: {}\n", .{control});
-                @panic("Unhandled control key");
+                log.warn("Pressed Ctrl+{c}", .{control});
+            },
+            .Command => |command| {
+                log.warn("Pressed command key: {}", .{command});
             },
             .DisplayCharacter => |_| {
                 try basic_commands.do_insert(.{ .app = app, .frame = app.current_frame, .key = k });

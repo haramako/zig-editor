@@ -2,7 +2,7 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const arrays = @import("lib/arrays.zig");
 
-pub const KeyControlType = enum {
+pub const KeyCommandType = enum {
     Up,
     Down,
     Right,
@@ -17,8 +17,10 @@ pub const KeyControlType = enum {
 };
 
 pub const Key = union(enum) {
-    Control: KeyControlType,
+    Command: KeyCommandType,
     DisplayCharacter: u8,
+    Control: u8,
+    Alt: u8,
 };
 
 /// Character Presentation Descriptor
