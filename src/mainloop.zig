@@ -5,6 +5,7 @@ const App = @import("app.zig");
 const log = @import("log.zig");
 const screen = @import("screen.zig");
 const KeySequenceProcessor = @import("key_sequence_processor.zig");
+const keybinding = @import("keybinding.zig");
 const types = @import("types.zig");
 const vt100 = @import("vt100.zig");
 const TextFrame = @import("text_frame.zig");
@@ -17,12 +18,28 @@ pub fn mainloop(app: *App) !void {
 
     try updateScreen(app);
 
+    var buf_len: usize = 0;
+    var buf: [4]types.Key = undefined;
+
     while (true) {
         const c2 = app.stdin().takeByte() catch continue;
         ksp.addByte(c2);
 
         while (ksp.nextKey()) |c| {
-            processKey(app, c) catch break;
+            if (buf_len >= buf.len) {
+                buf_len = 0;
+                continue;
+                //return error.OutOfKeyBuffer;
+            }
+            buf[buf_len] = c;
+            buf_len = buf_len + 1;
+
+            const kb = try keybinding.KeyBinding.init(buf[0..buf_len]);
+
+            const consumed = processKey(app, kb) catch break;
+            if (consumed) {
+                buf_len = 0;
+            }
         }
         try updateScreen(app);
     }
@@ -53,23 +70,46 @@ pub fn updateCursors(app: *App) !void {
     }
 }
 
-pub fn processKey(app: *App, k: types.Key) !void {
+pub fn processKey(app: *App, k: keybinding.KeyBinding) !bool {
     if (app.commands.get(k)) |command| {
-        try command(.{ .app = app, .frame = app.current_frame, .key = k });
+        // Found the keybinding.
+        try command(.{ .app = app, .frame = app.current_frame, .key = k.sequence[0] });
+        return true;
     } else {
-        switch (k) {
-            .Alt => |alt| {
-                log.warn("Pressed Alt+{c}", .{alt});
+        switch (k.sequence[k.len - 1]) {
+            .Control => |key| {
+                if (key == 'G') {
+                    // Clear the key buffer on Ctrl+G
+                    log.info("Canceled", .{});
+                    return true;
+                }
             },
-            .Control => |control| {
-                log.warn("Pressed Ctrl+{c}", .{control});
-            },
-            .Command => |command| {
-                log.warn("Pressed command key: {}", .{command});
-            },
-            .DisplayCharacter => |_| {
-                try basic_commands.do_insert(.{ .app = app, .frame = app.current_frame, .key = k });
-            },
+            else => {},
+        }
+        if (k.len == 1) {
+            switch (k.sequence[0]) {
+                .None => {
+                    return false;
+                },
+                .Alt => |alt| {
+                    log.warn("Pressed Alt+{c}", .{alt});
+                    return false;
+                },
+                .Control => |control| {
+                    log.warn("Pressed Ctrl+{c}", .{control});
+                    return false;
+                },
+                .Command => |command| {
+                    log.warn("Pressed command key: {}", .{command});
+                    return false;
+                },
+                .DisplayCharacter => {
+                    try basic_commands.do_insert(.{ .app = app, .frame = app.current_frame, .key = k.sequence[0] });
+                    return true;
+                },
+            }
+        } else {
+            return false;
         }
     }
 }

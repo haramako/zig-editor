@@ -168,7 +168,7 @@ pub fn parseKey(str: []const u8) !types.Key {
     if (mem.eql(u8, str, "PageDown")) return .{ .Command = .PageDown };
     if (mem.eql(u8, str, "Home")) return .{ .Command = .Home };
     if (mem.eql(u8, str, "End")) return .{ .Command = .End };
-    if (mem.eql(u8, str, "NewLine")) return .{ .Command = .NewLine };
+    if (mem.eql(u8, str, "NewLine")) return .{ .Control = 'M' };
 
     // Single display character
     if (str.len == 1) {

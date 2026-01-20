@@ -4,12 +4,12 @@ const mem = std.mem;
 const types = @import("types.zig");
 const key_sequence_processor = @import("key_sequence_processor.zig");
 
-const KeyBinding = struct {
+pub const KeyBinding = struct {
     len: usize = undefined,
     sequence: [4]types.Key = undefined,
     pub fn init(sequence: []types.Key) !KeyBinding {
-        var new_sequence: [4]types.Key = undefined;
-        @memcpy(&new_sequence, sequence[0..new_sequence.len]);
+        var new_sequence: [4]types.Key = .{.None} ** 4;
+        @memcpy(new_sequence[0..sequence.len], sequence);
         return .{ .len = sequence.len, .sequence = new_sequence };
     }
 };

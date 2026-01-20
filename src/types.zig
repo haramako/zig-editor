@@ -17,6 +17,7 @@ pub const KeyCommandType = enum {
 };
 
 pub const Key = union(enum) {
+    None,
     Command: KeyCommandType,
     DisplayCharacter: u8,
     Control: u8,

@@ -66,6 +66,13 @@ pub fn do_nothing(ctx: App.Ctx) !void {
     log.log(.info, .default, "Pressed key: {any}", .{ctx.key});
 }
 
+pub fn do_save(ctx: App.Ctx) !void {
+    const frame = ctx.frame.?;
+    _ = frame;
+    //try frame.saveToFile();
+    log.log(.info, .default, "File saved.", .{});
+}
+
 pub fn registerCommands(app: *App) !void {
     try app.registerCommandKey("Up", &do_up);
     try app.registerCommandKey("Down", &do_down);
@@ -82,4 +89,7 @@ pub fn registerCommands(app: *App) !void {
     try app.registerCommandKey("C-B", &do_left);
     try app.registerCommandKey("C-F", &do_right);
     try app.registerCommandKey("C-H", &do_backspace);
+    try app.registerCommandKey("C-J", &do_newline);
+
+    try app.registerCommandKey("C-x C-s", &do_save);
 }

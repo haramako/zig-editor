@@ -9,6 +9,7 @@ const arrays = @import("lib/arrays.zig");
 const screen = @import("screen.zig");
 const types = @import("types.zig");
 const TextFrame = @import("text_frame.zig");
+const keybinding = @import("keybinding.zig");
 
 const CharacterArray2D = types.CPDArray2D;
 const Character = types.CPD;
@@ -37,7 +38,7 @@ stdin_file_reader: Io.File.Reader,
 
 current_frame: *TextFrame,
 
-commands: std.AutoHashMap(types.Key, CommandFunc),
+commands: std.AutoHashMap(keybinding.KeyBinding, CommandFunc),
 
 pub fn init(io: Io, gpa: mem.Allocator) !App {
     var stdout_file = Io.File.stdout();
@@ -58,7 +59,7 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
     var buf: CharacterArray2D = try .init(gpa, @intCast(size.width), @intCast(size.height));
     buf.fill(Character{ .chr = ' ', .attr = 0, .color = 0 });
 
-    const commands = std.AutoHashMap(types.Key, CommandFunc).init(gpa);
+    const commands = std.AutoHashMap(keybinding.KeyBinding, CommandFunc).init(gpa);
 
     const current_frame = try gpa.create(TextFrame);
     current_frame.* = try TextFrame.init(gpa, "");
@@ -96,11 +97,11 @@ pub fn stdout(self: *@This()) *Io.Writer {
 }
 
 pub fn registerCommandKey(self: *@This(), keyStr: []const u8, command: CommandFunc) !void {
-    const key = try key_sequence_processor.parseKey(keyStr);
+    const key = try keybinding.parseKeyBinding(keyStr);
     try self.registerCommand(key, command);
 }
 
-pub fn registerCommand(self: *@This(), key: types.Key, command: CommandFunc) !void {
+pub fn registerCommand(self: *@This(), key: keybinding.KeyBinding, command: CommandFunc) !void {
     self.commands.put(key, command) catch {
         return error.commandRegistrationFailed;
     };
