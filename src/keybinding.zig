@@ -6,11 +6,22 @@ const key_sequence_processor = @import("key_sequence_processor.zig");
 
 pub const KeyBinding = struct {
     len: usize = undefined,
-    sequence: [4]types.Key = undefined,
+    sequence: [4]types.Key = .{ .None, .None, .None, .None },
     pub fn init(sequence: []types.Key) !KeyBinding {
         var new_sequence: [4]types.Key = undefined;
         @memcpy(new_sequence[0..sequence.len], sequence);
         return .{ .len = sequence.len, .sequence = new_sequence };
+    }
+
+    pub fn compare(a: KeyBinding, b: KeyBinding) std.math.Order {
+        const len = @min(a.len, b.len);
+        for (a.sequence[0..len], b.sequence[0..len]) |ka, kb| {
+            const ord = types.Key.compare(ka, kb);
+            if (ord != .eq) {
+                return ord;
+            }
+        }
+        return std.math.order(a.len, b.len);
     }
 };
 

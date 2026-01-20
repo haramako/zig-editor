@@ -16,17 +16,40 @@ pub const KeyCommandType = enum(u8) {
     End,
 };
 
-pub const Hoge = packed union {
-    a: u8,
-    b: u16,
-};
-
-pub const Key = packed union {
-    None: u8,
+pub const Key = union(enum) {
+    None,
     Command: KeyCommandType,
     DisplayCharacter: u8,
     Control: u8,
     Alt: u8,
+
+    pub fn compare(a: Key, b: Key) std.math.Order {
+        const ta = std.meta.activeTag(a);
+        const tb = std.meta.activeTag(b);
+        if (ta != tb) {
+            return std.math.order(@intFromEnum(ta), @intFromEnum(tb));
+        }
+
+        return switch (a) {
+            .None => .eq,
+            .Command => |ac| {
+                const bc = b.Command;
+                return std.math.order(@intFromEnum(ac), @intFromEnum(bc));
+            },
+            .DisplayCharacter => |ac| {
+                const bc = b.DisplayCharacter;
+                return std.math.order(ac, bc);
+            },
+            .Control => |ac| {
+                const bc = b.Control;
+                return std.math.order(ac, bc);
+            },
+            .Alt => |ac| {
+                const bc = b.Alt;
+                return std.math.order(ac, bc);
+            },
+        };
+    }
 };
 
 /// Character Presentation Descriptor
