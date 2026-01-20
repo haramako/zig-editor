@@ -2,7 +2,7 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const arrays = @import("lib/arrays.zig");
 
-pub const KeyCommandType = enum {
+pub const KeyCommandType = enum(u8) {
     Up,
     Down,
     Right,
@@ -16,8 +16,13 @@ pub const KeyCommandType = enum {
     End,
 };
 
-pub const Key = union(enum) {
-    None,
+pub const Hoge = packed union {
+    a: u8,
+    b: u16,
+};
+
+pub const Key = packed union {
+    None: u8,
     Command: KeyCommandType,
     DisplayCharacter: u8,
     Control: u8,

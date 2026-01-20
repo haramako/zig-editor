@@ -8,7 +8,7 @@ pub const KeyBinding = struct {
     len: usize = undefined,
     sequence: [4]types.Key = undefined,
     pub fn init(sequence: []types.Key) !KeyBinding {
-        var new_sequence: [4]types.Key = .{.None} ** 4;
+        var new_sequence: [4]types.Key = undefined;
         @memcpy(new_sequence[0..sequence.len], sequence);
         return .{ .len = sequence.len, .sequence = new_sequence };
     }

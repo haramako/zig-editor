@@ -27,6 +27,11 @@ pub const Point = struct {
 
 pub const CommandFunc = *const fn (ctx: Ctx) anyerror!void;
 
+pub const KeyBindingCommand = struct {
+    key: keybinding.KeyBinding,
+    func: CommandFunc,
+};
+
 io: Io,
 gpa: mem.Allocator,
 fb: CharacterArray2D,
@@ -38,7 +43,7 @@ stdin_file_reader: Io.File.Reader,
 
 current_frame: *TextFrame,
 
-commands: std.AutoHashMap(keybinding.KeyBinding, CommandFunc),
+commands: std.ArrayList(KeyBindingCommand),
 
 pub fn init(io: Io, gpa: mem.Allocator) !App {
     var stdout_file = Io.File.stdout();
@@ -59,7 +64,7 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
     var buf: CharacterArray2D = try .init(gpa, @intCast(size.width), @intCast(size.height));
     buf.fill(Character{ .chr = ' ', .attr = 0, .color = 0 });
 
-    const commands = std.AutoHashMap(keybinding.KeyBinding, CommandFunc).init(gpa);
+    const commands = try std.ArrayList(KeyBindingCommand).initCapacity(gpa, 100);
 
     const current_frame = try gpa.create(TextFrame);
     current_frame.* = try TextFrame.init(gpa, "");
@@ -102,7 +107,5 @@ pub fn registerCommandKey(self: *@This(), keyStr: []const u8, command: CommandFu
 }
 
 pub fn registerCommand(self: *@This(), key: keybinding.KeyBinding, command: CommandFunc) !void {
-    self.commands.put(key, command) catch {
-        return error.commandRegistrationFailed;
-    };
+    try self.commands.append(self.gpa, .{ .key = key, .func = command });
 }

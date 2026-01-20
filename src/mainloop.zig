@@ -70,46 +70,71 @@ pub fn updateCursors(app: *App) !void {
     }
 }
 
+fn comp(context: keybinding.KeyBinding, key: App.KeyBindingCommand) std.math.Order {
+    const a = @as([4]u8, @bitCast(context.sequence));
+    const b = @as([4]u8, @bitCast(key.key.sequence));
+    return std.mem.order(u8, &a, &b);
+}
+
+fn lessThan(_: void, a: App.KeyBindingCommand, b: App.KeyBindingCommand) bool {
+    const a_ = @as([4]u8, @bitCast(a.key.sequence));
+    const b_ = @as([4]u8, @bitCast(b.key.sequence));
+    return std.mem.order(u8, &a_, &b_) == .lt;
+}
+
 pub fn processKey(app: *App, k: keybinding.KeyBinding) !bool {
-    if (app.commands.get(k)) |command| {
-        // Found the keybinding.
+    std.sort.heap(App.KeyBindingCommand, app.commands.items, {}, comptime lessThan);
+
+    const idx = std.sort.lowerBound(App.KeyBindingCommand, app.commands.items, k, comp);
+    if (idx < app.commands.items.len) {
+        const command = app.commands.items[idx].func;
         try command(.{ .app = app, .frame = app.current_frame, .key = k.sequence[0] });
         return true;
     } else {
-        switch (k.sequence[k.len - 1]) {
-            .Control => |key| {
-                if (key == 'G') {
-                    // Clear the key buffer on Ctrl+G
-                    log.info("Canceled", .{});
-                    return true;
-                }
-            },
-            else => {},
-        }
-        if (k.len == 1) {
-            switch (k.sequence[0]) {
-                .None => {
-                    return false;
-                },
-                .Alt => |alt| {
-                    log.warn("Pressed Alt+{c}", .{alt});
-                    return false;
-                },
-                .Control => |control| {
-                    log.warn("Pressed Ctrl+{c}", .{control});
-                    return false;
-                },
-                .Command => |command| {
-                    log.warn("Pressed command key: {}", .{command});
-                    return false;
-                },
-                .DisplayCharacter => {
-                    try basic_commands.do_insert(.{ .app = app, .frame = app.current_frame, .key = k.sequence[0] });
-                    return true;
-                },
-            }
+        return false;
+    }
+
+    if (false) {
+        if (app.commands.get(k)) |command| {
+            // Found the keybinding.
+            try command(.{ .app = app, .frame = app.current_frame, .key = k.sequence[0] });
+            return true;
         } else {
-            return false;
+            switch (k.sequence[k.len - 1]) {
+                .Control => |key| {
+                    if (key == 'G') {
+                        // Clear the key buffer on Ctrl+G
+                        log.info("Canceled", .{});
+                        return true;
+                    }
+                },
+                else => {},
+            }
+            if (k.len == 1) {
+                switch (k.sequence[0]) {
+                    .None => {
+                        return false;
+                    },
+                    .Alt => |alt| {
+                        log.warn("Pressed Alt+{c}", .{alt});
+                        return false;
+                    },
+                    .Control => |control| {
+                        log.warn("Pressed Ctrl+{c}", .{control});
+                        return false;
+                    },
+                    .Command => |command| {
+                        log.warn("Pressed command key: {}", .{command});
+                        return false;
+                    },
+                    .DisplayCharacter => {
+                        try basic_commands.do_insert(.{ .app = app, .frame = app.current_frame, .key = k.sequence[0] });
+                        return true;
+                    },
+                }
+            } else {
+                return false;
+            }
         }
     }
 }
