@@ -1,7 +1,8 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const arrays = @import("lib/arrays.zig");
-const screen = @import("screen.zig");
+const corelib = @import("corelib");
+const arrays = corelib.arrays;
+const screen = @import("screen");
 
 pub const LineCPD = struct {
     cpds: std.ArrayList(screen.CPD),

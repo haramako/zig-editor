@@ -1,8 +1,8 @@
 const std = @import("std");
 
-pub const vt100 = @import("screen/vt100.zig");
-pub const screen = @import("screen/screen.zig");
-pub const KeySequenceProcessor = @import("screen/key_sequence_processor.zig");
+pub const vt100 = @import("vt100.zig");
+pub const screen = @import("screen.zig");
+pub const KeySequenceProcessor = @import("key_sequence_processor.zig");
 
 pub const KeyCommandType = enum(u8) {
     Up,

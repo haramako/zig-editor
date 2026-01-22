@@ -3,10 +3,10 @@ pub const KeySequenceProcessor = @This();
 const std = @import("std");
 const mem = std.mem;
 
-const deque = @import("../lib/deque.zig");
-
-const screen = @import("../screen.zig");
-const log = @import("../lib/log.zig");
+const screen = @import("root.zig");
+const corelib = @import("corelib");
+const deque = corelib.deque;
+const log = corelib.log;
 
 const KeySequenceState = enum {
     Normal,

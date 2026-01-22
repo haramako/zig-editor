@@ -3,6 +3,7 @@ const mem = std.mem;
 const Io = std.Io;
 
 const ze = @import("zig_editor");
+const corelib = @import("corelib");
 const FrameBuffer = ze.FrameBuffer;
 
 pub fn main(init: std.process.Init) !void {
@@ -21,8 +22,8 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
-    try ze.log.initLog(init.io, gpa);
-    defer ze.log.deinitLog(init.io, gpa);
+    try corelib.log.initLog(init.io, gpa);
+    defer corelib.log.deinitLog(init.io, gpa);
 
     var app: ze.App = try .init(init.io, gpa);
     defer app.deinit();
@@ -32,7 +33,7 @@ pub fn main(init: std.process.Init) !void {
     const src = "Hello\nZig Editor\nHow are you?\n";
     try app.current_frame.insertStr(app.current_frame.screen_cursor(), src);
 
-    ze.log.log(.info, .default, "Zig Editor started.", .{});
+    corelib.log.info("Zig Editor started.", .{});
 
     try app.setupConsole();
     try ze.mainloop.mainloop(&app);

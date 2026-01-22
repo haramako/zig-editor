@@ -6,7 +6,7 @@ const Allocator = std.mem.Allocator;
 const types = @import("types.zig");
 const Buffer = @import("buffer.zig");
 const bufutil = @import("bufutil.zig");
-const screen = @import("screen.zig");
+const screen = @import("screen");
 
 const CPD = screen.CPD;
 const LineCPD = types.LineCPD;

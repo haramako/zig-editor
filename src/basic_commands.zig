@@ -1,9 +1,9 @@
 const std = @import("std");
 
 const App = @import("app.zig");
-const screen = @import("screen.zig");
 const types = @import("types.zig");
-const log = @import("lib/log.zig");
+const corelib = @import("corelib");
+const log = corelib.log;
 const bufutil = @import("bufutil.zig");
 const TextFrame = @import("text_frame.zig");
 

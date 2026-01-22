@@ -2,8 +2,9 @@ const std = @import("std");
 const Io = std.Io;
 
 const App = @import("app.zig");
-const log = @import("lib/log.zig");
-const screen = @import("screen.zig");
+const corelib = @import("corelib");
+const log = corelib.log;
+const screen = @import("screen");
 const keybinding = @import("keybinding.zig");
 const types = @import("types.zig");
 const vt100 = screen.vt100;
