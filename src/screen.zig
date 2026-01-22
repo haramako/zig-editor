@@ -1,77 +1,62 @@
 const std = @import("std");
-const mem = std.mem;
 
-const builtin = @import("builtin");
-const windows = std.os.windows;
+pub const vt100 = @import("screen/vt100.zig");
+pub const screen = @import("screen/screen.zig");
+pub const KeySequenceProcessor = @import("screen/key_sequence_processor.zig");
 
-pub const ConsoleInfo = struct {
-    width: i32,
-    height: i32,
+pub const KeyCommandType = enum(u8) {
+    Up,
+    Down,
+    Right,
+    Left,
+    NewLine,
+    Delete,
+    Backspace,
+    PageUp,
+    PageDown,
+    Home,
+    End,
 };
 
-pub fn getConsoleInfo(file: *std.Io.File) ?ConsoleInfo {
-    if (builtin.os.tag != .windows) return null;
-    const handle = file.handle;
-    var info: std.os.windows.CONSOLE_SCREEN_BUFFER_INFO = undefined;
-    if (windows.kernel32.GetConsoleScreenBufferInfo(handle, &info) == 0) {
-        return null;
-    }
-    return .{ .width = @intCast(info.dwMaximumWindowSize.X), .height = @intCast(info.dwMaximumWindowSize.Y) };
-}
+pub const Key = union(enum) {
+    None,
+    Command: KeyCommandType,
+    DisplayCharacter: u8,
+    Control: u8,
+    Alt: u8,
 
-pub fn set_raw_mode(file: *std.Io.File, b: bool) !void {
-    if (builtin.os.tag == .windows) {
-        //const ENABLE_PROCESSED_INPUT: u32 = 0x0001;
-        const ENABLE_LINE_INPUT: u32 = 0x0002;
-        const ENABLE_ECHO_INPUT: u32 = 0x0004;
-        //const ENABLE_WINDOW_INPUT: u32 = 0x0008;
-        const ENABLE_INSERT_MODE: u32 = 0x0020;
-        const ENABLE_VIRTUAL_TERMINAL_INPUT: u32 = 0x0200;
-
-        const handle = file.handle;
-        var flags: u32 = undefined;
-        if (windows.kernel32.GetConsoleMode(handle, &flags) == 0) return error.NotATerminal;
-        if (b) {
-            flags &= ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_INSERT_MODE);
-            flags |= (ENABLE_VIRTUAL_TERMINAL_INPUT);
-        } else {
-            flags |= ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT;
-            flags &= ~(ENABLE_VIRTUAL_TERMINAL_INPUT);
+    pub fn compare(a: Key, b: Key) std.math.Order {
+        const ta = std.meta.activeTag(a);
+        const tb = std.meta.activeTag(b);
+        if (ta != tb) {
+            return std.math.order(@intFromEnum(ta), @intFromEnum(tb));
         }
-        std.debug.assert(windows.kernel32.SetConsoleMode(handle, flags) != 0);
-    } else {
-        const posix = std.posix;
-        var t: posix.termios = try posix.tcgetattr(posix.STDIN_FILENO);
 
-        t.lflag.ECHO = !b;
-        t.lflag.ICANON = !b;
-        try posix.tcsetattr(posix.STDIN_FILENO, .NOW, t);
+        return switch (a) {
+            .None => .eq,
+            .Command => |ac| {
+                const bc = b.Command;
+                return std.math.order(@intFromEnum(ac), @intFromEnum(bc));
+            },
+            .DisplayCharacter => |ac| {
+                const bc = b.DisplayCharacter;
+                return std.math.order(ac, bc);
+            },
+            .Control => |ac| {
+                const bc = b.Control;
+                return std.math.order(ac, bc);
+            },
+            .Alt => |ac| {
+                const bc = b.Alt;
+                return std.math.order(ac, bc);
+            },
+        };
     }
-}
+};
 
-pub fn set_raw_mode_writer(file: *std.Io.File, b: bool) !void {
-    if (builtin.os.tag == .windows) {
-        const ENABLE_WRAP_AT_EOL_OUTPUT: u32 = 0x0002;
-        const ENABLE_VIRTUAL_TERMINAL_PROCESSING: u32 = 0x0004;
-        const DISABLE_NEWLINE_AUTO_RETURN: u32 = 0x0008;
-
-        const handle = file.handle;
-        var flags: u32 = undefined;
-        if (windows.kernel32.GetConsoleMode(handle, &flags) == 0) return error.NotATerminal;
-        if (b) {
-            flags &= ~(ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT);
-            flags |= (DISABLE_NEWLINE_AUTO_RETURN);
-        } else {
-            flags |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-            //flags &= ~(ENABLE_VIRTUAL_TERMINAL_INPUT);
-        }
-        std.debug.assert(windows.kernel32.SetConsoleMode(handle, flags) != 0);
-    } else {
-        const posix = std.posix;
-        var t: posix.termios = try posix.tcgetattr(posix.STDIN_FILENO);
-
-        t.lflag.ECHO = !b;
-        t.lflag.ICANON = !b;
-        try posix.tcsetattr(posix.STDIN_FILENO, .NOW, t);
-    }
-}
+/// Character Presentation Descriptor
+pub const CPD = struct {
+    chr: u8,
+    attr: u8,
+    color: u8,
+};

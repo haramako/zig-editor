@@ -2,24 +2,23 @@ const std = @import("std");
 const Io = std.Io;
 
 const App = @import("app.zig");
-const log = @import("log.zig");
+const log = @import("lib/log.zig");
 const screen = @import("screen.zig");
-const KeySequenceProcessor = @import("key_sequence_processor.zig");
 const keybinding = @import("keybinding.zig");
 const types = @import("types.zig");
-const vt100 = @import("vt100.zig");
+const vt100 = screen.vt100;
 const TextFrame = @import("text_frame.zig");
 const bufutil = @import("bufutil.zig");
 const basic_commands = @import("basic_commands.zig");
 
 pub fn mainloop(app: *App) !void {
-    var ksp = try KeySequenceProcessor.init(app.gpa);
+    var ksp = try screen.KeySequenceProcessor.init(app.gpa);
     defer ksp.deinit();
 
     try updateScreen(app);
 
     var buf_len: usize = 0;
-    var buf: [4]types.Key = undefined;
+    var buf: [4]screen.Key = undefined;
 
     while (true) {
         const c2 = app.stdin().takeByte() catch continue;

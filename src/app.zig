@@ -3,7 +3,6 @@ const App = @This();
 const std = @import("std");
 const Io = std.Io;
 const mem = std.mem;
-const key_sequence_processor = @import("key_sequence_processor.zig");
 const deque = @import("lib/deque.zig");
 const arrays = @import("lib/arrays.zig");
 const screen = @import("screen.zig");
@@ -12,12 +11,12 @@ const TextFrame = @import("text_frame.zig");
 const keybinding = @import("keybinding.zig");
 
 const CharacterArray2D = types.CPDArray2D;
-const Character = types.CPD;
+const Character = screen.CPD;
 
 pub const Ctx = struct {
     app: *App,
     frame: ?*TextFrame,
-    key: types.Key,
+    key: screen.Key,
 };
 
 pub const Point = struct {
@@ -54,8 +53,8 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
     const stdin_buffer = try gpa.alloc(u8, 4096);
     const stdin_file_reader: Io.File.Reader = .init(stdin_file, io, stdin_buffer);
 
-    var size: screen.ConsoleInfo = undefined;
-    if (screen.getConsoleInfo(&stdout_file)) |info| {
+    var size: screen.screen.ConsoleInfo = undefined;
+    if (screen.screen.getConsoleInfo(&stdout_file)) |info| {
         size = info;
     } else {
         size = .{ .width = 80, .height = 25 };
@@ -83,8 +82,8 @@ pub fn init(io: Io, gpa: mem.Allocator) !App {
 }
 
 pub fn setupConsole(self: *@This()) !void {
-    try screen.set_raw_mode_writer(&self.stdout_file_writer.file, true);
-    try screen.set_raw_mode(&self.stdin_file_reader.file, true);
+    try screen.screen.set_raw_mode_writer(&self.stdout_file_writer.file, true);
+    try screen.screen.set_raw_mode(&self.stdin_file_reader.file, true);
 }
 
 pub fn deinit(self: *@This()) void {

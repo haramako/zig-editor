@@ -3,7 +3,7 @@ const std = @import("std");
 const App = @import("app.zig");
 const screen = @import("screen.zig");
 const types = @import("types.zig");
-const log = @import("log.zig");
+const log = @import("lib/log.zig");
 const bufutil = @import("bufutil.zig");
 const TextFrame = @import("text_frame.zig");
 

@@ -24,6 +24,17 @@
 * PageDown
 
 
+## モジュール構造
+
+neki
+  core -> screen
+    App
+    Buffer
+    TextFrame
+  screen
+  
+
+
 ## 全体の流れ
 
 Buffer -> LineBuffer（１行ごと、文字の数、色などを判別） -> FrameBuffer（１画面）

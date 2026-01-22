@@ -16,7 +16,7 @@ pub fn main(init: std.process.Init) !void {
     _ = it.next(); // skip program name
     while (it.next()) |arg| {
         if (mem.eql(u8, arg, "--vt100")) {
-            try ze.vt100.testVt100();
+            try ze.screen.vt100.testVt100();
             return;
         }
     }

@@ -3,10 +3,10 @@ pub const KeySequenceProcessor = @This();
 const std = @import("std");
 const mem = std.mem;
 
-const deque = @import("lib/deque.zig");
+const deque = @import("../lib/deque.zig");
 
-const types = @import("types.zig");
-const log = @import("log.zig");
+const screen = @import("../screen.zig");
+const log = @import("../lib/log.zig");
 
 const KeySequenceState = enum {
     Normal,
@@ -17,7 +17,7 @@ const KeySequenceState = enum {
 
 keyQueue: deque.Deque(u8),
 state: KeySequenceState = .Normal,
-esc3_state: types.KeyCommandType = undefined,
+esc3_state: screen.KeyCommandType = undefined,
 
 pub fn init(gpa: mem.Allocator) mem.Allocator.Error!@This() {
     return @This(){ .keyQueue = try .init(gpa) };
@@ -39,7 +39,7 @@ pub fn addBuf(self: *@This(), b: []const u8) void {
     }
 }
 
-pub fn nextKey(self: *@This()) ?types.Key {
+pub fn nextKey(self: *@This()) ?screen.Key {
     const c = self.keyQueue.popFront() orelse return null;
     switch (self.state) {
         .Normal => {
@@ -134,7 +134,7 @@ pub fn nextKey(self: *@This()) ?types.Key {
     }
 }
 
-pub fn parseKey(str: []const u8) !types.Key {
+pub fn parseKey(str: []const u8) !screen.Key {
     if (str.len == 0) return error.InvalidKey;
 
     // Control key: "C-a", "C-x", etc.
