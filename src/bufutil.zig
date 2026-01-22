@@ -1,7 +1,6 @@
 const std = @import("std");
 const mem = std.mem;
 const Buffer = @import("buffer.zig");
-const types = @import("types.zig");
 
 pub fn lineHead(buf: *Buffer, pos: usize) !usize {
     if (pos < 0 and pos > buf.len()) {

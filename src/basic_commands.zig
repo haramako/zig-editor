@@ -1,7 +1,6 @@
 const std = @import("std");
 
 const App = @import("app.zig");
-const types = @import("types.zig");
 const corelib = @import("corelib");
 const log = corelib.log;
 const bufutil = @import("bufutil.zig");

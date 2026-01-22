@@ -7,11 +7,10 @@ const corelib = @import("corelib");
 const deque = corelib.deque;
 const arrays = corelib.arrays;
 const screen = @import("screen");
-const types = @import("types.zig");
 const TextFrame = @import("text_frame.zig");
 const keybinding = @import("keybinding.zig");
 
-const CharacterArray2D = types.CPDArray2D;
+const CharacterArray2D = TextFrame.CPDArray2D;
 const Character = screen.CPD;
 
 pub const Ctx = struct {

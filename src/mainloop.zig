@@ -6,7 +6,6 @@ const corelib = @import("corelib");
 const log = corelib.log;
 const screen = @import("screen");
 const keybinding = @import("keybinding.zig");
-const types = @import("types.zig");
 const vt100 = screen.vt100;
 const TextFrame = @import("text_frame.zig");
 const bufutil = @import("bufutil.zig");
@@ -141,7 +140,7 @@ pub fn redraw(app: *App) !void {
     }
 }
 
-pub fn refresh(writer: *Io.Writer, fb: *const types.CPDArray2D) !void {
+pub fn refresh(writer: *Io.Writer, fb: *const TextFrame.CPDArray2D) !void {
     for (0..fb.height) |y| {
         _ = try vt100.pos(1, @intCast(y + 1)).format(writer);
         for (0..fb.width) |x| {

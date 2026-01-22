@@ -1,6 +1,5 @@
 const std = @import("std");
 
-pub const types = @import("types.zig");
 pub const App = @import("app.zig");
 pub const Buffer = @import("buffer.zig");
 pub const TextFrame = @import("text_frame.zig");
