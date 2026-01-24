@@ -1,6 +1,7 @@
 const std = @import("std");
 
 pub var logList: std.ArrayList([]const u8) = undefined;
+pub var savedGpa: std.mem.Allocator = undefined;
 
 pub fn debug(
     comptime format: []const u8,
@@ -38,8 +39,8 @@ pub fn log(
 ) void {
     _ = level;
     _ = scope;
-    const msg = std.fmt.allocPrint(std.heap.page_allocator, format, args) catch return;
-    logList.append(std.heap.page_allocator, msg) catch {};
+    const msg = std.fmt.allocPrint(savedGpa, format, args) catch return;
+    logList.append(savedGpa, msg) catch {};
 
     logWriter.print("{s}\n", .{msg}) catch {};
     logWriter.flush() catch {};
@@ -52,6 +53,7 @@ var logFileWriter: std.Io.File.Writer = undefined;
 var logWriter: *std.Io.Writer = undefined;
 
 pub fn initLog(io: std.Io, gpa: std.mem.Allocator) !void {
+    savedGpa = gpa;
     logList = try std.ArrayList([]const u8).initCapacity(gpa, 1024);
     errdefer logList.deinit(gpa);
 

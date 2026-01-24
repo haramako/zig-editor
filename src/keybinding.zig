@@ -2,7 +2,6 @@ const std = @import("std");
 const mem = std.mem;
 
 const root = @import("root.zig");
-const types = root.types;
 const screen = root.screen;
 
 pub const KeyBinding = struct {

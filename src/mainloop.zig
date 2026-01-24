@@ -35,7 +35,17 @@ pub fn mainloop(app: *App) !void {
 
             const kb = try keybinding.KeyBinding.init(buf[0..buf_len]);
 
-            const consumed = processKey(app, kb) catch break;
+            const consumed = processKey(app, kb) catch |err| {
+                if (err == error.QuitApp) {
+                    try app.stdout().print("{f}", .{vt100.pos(1, @intCast(app.fb.height))});
+                    try app.stdout().flush();
+                    return;
+                } else {
+                    log.err("Error processing key: {any}", .{err});
+                }
+                buf_len = 0;
+                continue;
+            };
             if (consumed) {
                 buf_len = 0;
             }
@@ -132,6 +142,9 @@ pub fn processKey(app: *App, k: keybinding.KeyBinding) !bool {
 pub fn redraw(app: *App) !void {
     app.fb.fill(.{ .chr = ' ', .attr = 0, .color = 0 });
     const text_frame = app.current_frame;
+    for (text_frame.lines.items) |*line| {
+        line.deinit(app.gpa);
+    }
     text_frame.lines.clearAndFree(app.gpa);
     try TextFrame.makeLineCPDList(app.gpa, &text_frame.buf, &text_frame.lines);
 

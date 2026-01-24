@@ -21,7 +21,7 @@ pub fn getConsoleInfo(file: *std.Io.File) ?ConsoleInfo {
 
 pub fn set_raw_mode(file: *std.Io.File, b: bool) !void {
     if (builtin.os.tag == .windows) {
-        //const ENABLE_PROCESSED_INPUT: u32 = 0x0001;
+        const ENABLE_PROCESSED_INPUT: u32 = 0x0001;
         const ENABLE_LINE_INPUT: u32 = 0x0002;
         const ENABLE_ECHO_INPUT: u32 = 0x0004;
         //const ENABLE_WINDOW_INPUT: u32 = 0x0008;
@@ -32,7 +32,7 @@ pub fn set_raw_mode(file: *std.Io.File, b: bool) !void {
         var flags: u32 = undefined;
         if (windows.kernel32.GetConsoleMode(handle, &flags) == 0) return error.NotATerminal;
         if (b) {
-            flags &= ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_INSERT_MODE);
+            flags &= ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_INSERT_MODE | ENABLE_PROCESSED_INPUT);
             flags |= (ENABLE_VIRTUAL_TERMINAL_INPUT);
         } else {
             flags |= ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT;
@@ -62,8 +62,8 @@ pub fn set_raw_mode_writer(file: *std.Io.File, b: bool) !void {
             flags &= ~(ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT);
             flags |= (DISABLE_NEWLINE_AUTO_RETURN);
         } else {
-            flags |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-            //flags &= ~(ENABLE_VIRTUAL_TERMINAL_INPUT);
+            flags |= (ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_WRAP_AT_EOL_OUTPUT);
+            flags &= ~(DISABLE_NEWLINE_AUTO_RETURN);
         }
         std.debug.assert(windows.kernel32.SetConsoleMode(handle, flags) != 0);
     } else {

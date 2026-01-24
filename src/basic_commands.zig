@@ -72,6 +72,37 @@ pub fn do_save(ctx: App.Ctx) !void {
     log.log(.info, .default, "File saved.", .{});
 }
 
+pub fn do_home(ctx: App.Ctx) !void {
+    const frame = ctx.frame.?;
+    const cur = frame.user_cursor();
+    const column = try bufutil.lineHead(&frame.buf, cur.pos);
+    cur.pos = column;
+}
+
+pub fn do_end(ctx: App.Ctx) !void {
+    const frame = ctx.frame.?;
+    const cur = frame.user_cursor();
+    const line_tail = try bufutil.lineTail(&frame.buf, cur.pos);
+    cur.pos = line_tail;
+}
+
+pub fn do_killLine(ctx: App.Ctx) !void {
+    const frame = ctx.frame.?;
+    const cur = frame.user_cursor();
+    const line_tail = try bufutil.lineTail(&frame.buf, cur.pos);
+    const remove_len = line_tail - cur.pos;
+    if (remove_len == 0) {
+        try frame.removeStr(cur, 1);
+    } else {
+        try frame.removeStr(cur, remove_len);
+    }
+}
+
+pub fn do_quit(ctx: App.Ctx) !void {
+    _ = ctx;
+    return error.QuitApp;
+}
+
 pub fn registerCommands(app: *App) !void {
     try app.registerCommandKey("Up", &do_up);
     try app.registerCommandKey("Down", &do_down);
@@ -82,6 +113,8 @@ pub fn registerCommands(app: *App) !void {
     try app.registerCommandKey("Delete", &do_delete);
     try app.registerCommandKey("PageUp", &do_nothing);
     try app.registerCommandKey("PageDown", &do_nothing);
+    try app.registerCommandKey("Home", &do_home);
+    try app.registerCommandKey("End", &do_end);
 
     try app.registerCommandKey("C-P", &do_up);
     try app.registerCommandKey("C-N", &do_down);
@@ -89,6 +122,11 @@ pub fn registerCommands(app: *App) !void {
     try app.registerCommandKey("C-F", &do_right);
     try app.registerCommandKey("C-H", &do_backspace);
     try app.registerCommandKey("C-J", &do_newline);
+    try app.registerCommandKey("C-D", &do_delete);
+    try app.registerCommandKey("C-A", &do_home);
+    try app.registerCommandKey("C-E", &do_end);
+    try app.registerCommandKey("C-K", &do_killLine);
+    try app.registerCommandKey("C-X C-C", &do_quit);
 
     try app.registerCommandKey("C-x C-s", &do_save);
 }

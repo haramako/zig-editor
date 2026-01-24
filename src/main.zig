@@ -36,5 +36,14 @@ pub fn main(init: std.process.Init) !void {
     corelib.log.info("Zig Editor started.", .{});
 
     try app.setupConsole();
-    try ze.mainloop.mainloop(&app);
+    ze.mainloop.mainloop(&app) catch |err| {
+        if (err == error.QuitApp) {
+            return;
+        } else {
+            corelib.log.err("Error in main loop: {any}", .{err});
+            return err;
+        }
+    };
+
+    try ze.screen.screen.set_raw_mode_writer(&app.stdout_file_writer.file, false);
 }

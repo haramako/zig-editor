@@ -90,6 +90,9 @@ pub fn deinit(self: *@This()) void {
     self.fb.deinit();
     self.gpa.free(self.stdout_buffer);
     self.gpa.free(self.stdin_buffer);
+    self.commands.deinit(self.gpa);
+    self.current_frame.deinit();
+    self.gpa.destroy(self.current_frame);
 }
 
 pub fn stdin(self: *@This()) *Io.Reader {

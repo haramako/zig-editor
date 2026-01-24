@@ -10,9 +10,9 @@
 - lineFromBuffer
 - 上下左右,Enter,DEL,BS
 
-* Home
-* End
-* C-K
+- Home
+- End
+- C-K
 * Copy
 * Cut
 * Paste
@@ -26,12 +26,15 @@
 
 ## モジュール構造
 
-neki
-  core -> screen
+corelib
+screen -> corelib
+neki_core -> corelib, screen
     App
     Buffer
     TextFrame
-  screen
+neki_editor
+neki_commands
+    エディターコマンド
   
 
 
