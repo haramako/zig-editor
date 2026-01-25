@@ -31,11 +31,24 @@ pub fn main(init: std.process.Init) !void {
     try ze.basic_commands.registerCommands(&app);
 
     const src = "Hello\nZig Editor\nHow are you?\n";
+    for (0..100) |i| {
+        var buf: [32]u8 = undefined;
+        const line = try std.fmt.bufPrint(&buf, "{d}\n", .{i});
+        try app.current_frame.insertStr(app.current_frame.user_cursor(), line);
+    }
     try app.current_frame.insertStr(app.current_frame.screen_cursor(), src);
 
     corelib.log.info("Zig Editor started.", .{});
 
     try app.setupConsole();
+    defer {
+        app.stdout().print("{f}", .{ze.screen.vt100.pos(1, @intCast(app.fb.height))}) catch unreachable;
+        app.stdout().print("END\n", .{}) catch unreachable;
+        app.stdout().flush() catch unreachable;
+
+        ze.screen.screen.set_raw_mode_writer(&app.stdout_file_writer.file, false) catch unreachable;
+    }
+
     ze.mainloop.mainloop(&app) catch |err| {
         if (err == error.QuitApp) {
             return;
@@ -44,6 +57,4 @@ pub fn main(init: std.process.Init) !void {
             return err;
         }
     };
-
-    try ze.screen.screen.set_raw_mode_writer(&app.stdout_file_writer.file, false);
 }

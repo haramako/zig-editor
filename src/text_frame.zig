@@ -47,13 +47,12 @@ cursors: std.ArrayList(Cursor),
 
 pub fn init(gpa: Allocator, source: []const u8) !TextFrame {
     const buf: Buffer = try .init(gpa, source, .{});
-    var lines: std.ArrayList(LineCPD) = try .initCapacity(gpa, 100);
+    const lines: std.ArrayList(LineCPD) = try .initCapacity(gpa, 100);
     var cursors: std.ArrayList(Cursor) = try .initCapacity(gpa, 8);
 
     try cursors.append(gpa, .init());
     try cursors.append(gpa, .init());
 
-    try makeLineCPDList(gpa, &buf, &lines);
     return .{
         .allocator = gpa,
         .buf = buf,
@@ -147,12 +146,17 @@ pub fn removeStr(self: *@This(), cur: *Cursor, remove: usize) !void {
     try self.modify(cur, remove, &[_]u8{});
 }
 
-pub fn makeLineCPDList(gpa: Allocator, buf: *const Buffer, lines: *std.ArrayList(LineCPD)) !void {
-    var pos: usize = 0;
+pub fn makeLineCPDList(self: *@This(), buf: *const Buffer, lines: *std.ArrayList(LineCPD)) !void {
+    for (self.lines.items) |*line| {
+        line.deinit(self.allocator);
+    }
+    self.lines.clearAndFree(self.allocator);
+
+    var pos: usize = self.screen_cursor().pos;
     while (true) {
-        var line_cpd: LineCPD = try .init(gpa);
-        const eob, pos = try makeLineCPD(gpa, buf, pos, &line_cpd.cpds);
-        try lines.append(gpa, line_cpd);
+        var line_cpd: LineCPD = try .init(self.allocator);
+        const eob, pos = try makeLineCPD(self.allocator, buf, pos, &line_cpd.cpds);
+        try lines.append(self.allocator, line_cpd);
         if (eob) {
             break;
         }
@@ -168,6 +172,26 @@ fn makeLineCPD(gpa: Allocator, buf: *const Buffer, pos: usize, cpds: *std.ArrayL
         p += 1;
     }
     return error.outOfBounds;
+}
+
+pub fn scrollScreeenToCursorInside(self: *@This(), height: usize, cur: *Cursor) !bool {
+    try self.updateCursor(cur, cur.pos);
+    var cursor = self.screen_cursor();
+    const begin_line_of_screen = cursor.line;
+    if (cur.line < begin_line_of_screen) {
+        const new_pos = try bufutil.lineHead(&self.buf, @max(begin_line_of_screen - 1, 0));
+        try self.updateCursor(cursor, new_pos);
+        return true;
+    }
+    const end_line_of_screen = cursor.line + height;
+    if (cur.line >= end_line_of_screen) {
+        const new_line = @max(cur.line - height + 1, 0);
+        const new_pos = try bufutil.getPosFromLineColumn(&self.buf, new_line, 0);
+        try self.updateCursor(cursor, new_pos);
+        return true;
+    }
+
+    return false;
 }
 
 pub fn moveCursorUp(frame: *TextFrame, cur: *Cursor) !void {

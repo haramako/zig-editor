@@ -7,15 +7,17 @@ const bufutil = @import("bufutil.zig");
 const TextFrame = @import("text_frame.zig");
 
 pub fn do_up(ctx: App.Ctx) !void {
-    const frame = ctx.frame.?;
+    var frame = ctx.frame.?;
     const cur = frame.user_cursor();
     try TextFrame.moveCursorUp(frame, cur);
+    _ = try frame.scrollScreeenToCursorInside(ctx.app.fb.height, cur);
 }
 
 pub fn do_down(ctx: App.Ctx) !void {
-    const frame = ctx.frame.?;
+    var frame = ctx.frame.?;
     const cur = frame.user_cursor();
     try TextFrame.moveCursorDown(frame, cur);
+    _ = try frame.scrollScreeenToCursorInside(ctx.app.fb.height, cur);
 }
 
 pub fn do_left(ctx: App.Ctx) !void {

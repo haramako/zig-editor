@@ -37,8 +37,6 @@ pub fn mainloop(app: *App) !void {
 
             const consumed = processKey(app, kb) catch |err| {
                 if (err == error.QuitApp) {
-                    try app.stdout().print("{f}", .{vt100.pos(1, @intCast(app.fb.height))});
-                    try app.stdout().flush();
                     return;
                 } else {
                     log.err("Error processing key: {any}", .{err});
@@ -142,14 +140,15 @@ pub fn processKey(app: *App, k: keybinding.KeyBinding) !bool {
 pub fn redraw(app: *App) !void {
     app.fb.fill(.{ .chr = ' ', .attr = 0, .color = 0 });
     const text_frame = app.current_frame;
-    for (text_frame.lines.items) |*line| {
-        line.deinit(app.gpa);
-    }
-    text_frame.lines.clearAndFree(app.gpa);
-    try TextFrame.makeLineCPDList(app.gpa, &text_frame.buf, &text_frame.lines);
+    try text_frame.makeLineCPDList(&text_frame.buf, &text_frame.lines);
 
-    for (text_frame.lines.items, 0..) |line, i| {
-        @memcpy(app.fb.items[i][0..line.cpds.items.len], line.cpds.items);
+    for (0..app.fb.height) |i| {
+        if (i < text_frame.lines.items.len) {
+            const line = text_frame.lines.items[i];
+            @memcpy(app.fb.items[i][0..line.cpds.items.len], line.cpds.items);
+        } else {
+            break;
+        }
     }
 }
 

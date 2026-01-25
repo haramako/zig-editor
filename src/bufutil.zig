@@ -28,6 +28,41 @@ pub fn lineTail(buf: *Buffer, pos: usize) !usize {
     return p;
 }
 
+pub fn getLineNumber(buf: *Buffer, pos: usize) !usize {
+    if (pos < 0 and pos > buf.len()) {
+        return error.outOfBounds;
+    }
+    var line_num: usize = 0;
+    for (0..pos) |i| {
+        const c = buf.get(i) orelse return error.outOfBounds;
+        if (c == '\n') {
+            line_num += 1;
+        }
+    }
+    return line_num;
+}
+
+pub fn getPosFromLineColumn(buf: *Buffer, line: usize, column: usize) !usize {
+    var current_line: usize = 0;
+    var current_column: usize = 0;
+    for (0..buf.len()) |i| {
+        if (current_line == line and current_column == column) {
+            return i;
+        }
+        const c = buf.get(i) orelse return error.outOfBounds;
+        if (c == '\n') {
+            current_line += 1;
+            current_column = 0;
+        } else {
+            current_column += 1;
+        }
+    }
+    if (current_line == line and current_column == column) {
+        return buf.len();
+    }
+    return error.outOfBounds;
+}
+
 pub fn getColumnInLine(buf: *Buffer, pos: usize) !usize {
     const head = try lineHead(buf, pos);
     return pos - head;

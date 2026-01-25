@@ -1,10 +1,24 @@
 
 
-* logging
-* KeyBindingの処理
-* Commandを整備する
-* Cursorを実装
 * スクロール
+* Cursorを実装
+* 色を付ける
+* 拡張子によるモード変更
+* コピー＆ペースト
+* Undo/Redo
+- Commandを整備する
+
+* Copy
+* Cut
+* Paste
+* Save
+* Load
+* Ctrl+L
+* PageUp
+* PageDown
+
+- logging
+- KeyBindingの処理
 - Buffer
 - Buffer.modify
 - lineFromBuffer
@@ -13,16 +27,7 @@
 - Home
 - End
 - C-K
-* Copy
-* Cut
-* Paste
-* Save
-* Load
-* Quit
-* Ctrl+L
-* PageUp
-* PageDown
-
+- Quit
 
 ## モジュール構造
 
