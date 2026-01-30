@@ -8,6 +8,7 @@ pub const mainloop = @import("mainloop.zig");
 pub const bufutil = @import("bufutil.zig");
 pub const screen = @import("screen");
 pub const keybinding = @import("keybinding.zig");
+pub const test_utils = @import("test_utils.zig");
 
 comptime {
     std.testing.refAllDecls(@This());
